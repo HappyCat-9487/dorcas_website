@@ -4,45 +4,77 @@ import { SearchPanel } from "@/src/components/home/search-panel";
 import { SocialRail } from "@/src/components/home/social-rail";
 import styles from "@/src/components/home/homepage.module.css";
 import { Menu } from "lucide-react";
+import { Italianno } from "next/font/google";
+
+const italianno = Italianno({
+  subsets: ["latin"],
+  weight: "400",
+});
 
 export function HomeHero() {
   return (
-    <section className="relative min-h-[920px] overflow-hidden">
-      <img
-        src={HERO_IMAGE}
-        alt="Travel beach hero"
-        className="absolute inset-x-0 top-0 h-[560px] w-full object-cover"
-      />
-      <div className="absolute inset-x-0 top-0 h-[560px] bg-gradient-to-b from-black/10 to-black/45" />
-      <div className={`absolute inset-x-0 top-[350px] h-[280px] bg-[#f5ca91] ${styles.heroCurve}`} />
+    <section className="bg-[#f5ca91]">
+      {/* ── Hero photo zone ─────────────────────────────────────────── */}
+      <div className="relative h-[420px] overflow-hidden md:h-[580px]">
+        <img
+          src={HERO_IMAGE}
+          alt="Travel beach hero"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        {/* dark gradient so text is readable */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/10 to-black/55" />
 
-      <div className="relative z-10 mx-auto max-w-[1440px] px-6 pt-7 md:px-10">
-        <header className="relative flex items-center justify-center">
-          <img src={LOGO_IMAGE} alt="Dorcas Travel logo" className="h-20 w-auto object-contain" />
-          <button aria-label="Menu" className="absolute right-0 top-4 text-zinc-700">
-            <Menu className="size-11" />
-          </button>
-        </header>
+        {/* ── Content inside the photo ──────────────────────────────── */}
+        <div className="relative z-10 mx-auto h-full max-w-[1440px] px-5 pt-5 md:px-10 md:pt-7">
+          <header className="relative flex items-center justify-center">
+            <img
+              src={LOGO_IMAGE}
+              alt="Dorcas Travel logo"
+              className="h-[52px] w-auto object-contain md:h-[72px]"
+            />
+            <button aria-label="Menu" className="absolute right-0 top-1 text-white md:top-3">
+              <Menu className="size-8 md:size-10" />
+            </button>
+          </header>
 
-        <div className="mt-6">
-          <RegionTabs />
+          <div className="mt-3 md:mt-5">
+            <RegionTabs />
+          </div>
+
+          <h1
+            className={`mt-6 max-w-[480px] text-[34px] leading-[1.08] text-white md:mt-10 md:max-w-[640px] md:text-[58px] ${styles.headline}`}
+          >
+            "Ogni angolo,
+            <br />
+            una storia."
+            <br />
+            每個角落，都是一個故事。
+          </h1>
         </div>
 
-        <h1
-          className={`mt-10 max-w-[710px] text-[52px] leading-[1.02] text-white md:text-[64px] ${styles.headline}`}
-        >
-          ”Ogni angolo,
-          <br />
-          una storia.“
-          <br />
-          每個角落，都是一個故事。
-        </h1>
+        {/* ── Wave cutout at bottom of photo ────────────────────────── */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg
+            viewBox="0 0 1440 130"
+            preserveAspectRatio="none"
+            className="block h-[80px] w-full md:h-[130px]"
+            aria-hidden="true"
+          >
+            <path
+              d="M0,80 C200,20 480,110 720,60 C960,10 1200,90 1440,50 L1440,130 L0,130 Z"
+              fill="#f5ca91"
+            />
+          </svg>
+        </div>
       </div>
 
-      <div className="relative z-10 mx-auto mt-24 grid max-w-[1440px] gap-6 px-6 md:grid-cols-[1fr_auto] md:px-10">
-        <p className="pt-2 leading-tight">
-          <span className={`${styles.scriptPrompt} text-[56px]`}>Che programmi?</span>{" "}
-          <span className="text-[48px]">新行程？</span>
+      {/* ── Sandy zone below wave ──────────────────────────────────── */}
+      <div className="mx-auto max-w-[1440px] grid gap-6 px-5 pb-10 pt-6 md:grid-cols-[1fr_auto] md:gap-10 md:px-10 md:pb-14 md:pt-8 md:pr-28 xl:pr-12">
+        <p className="leading-tight">
+          <span className={`${italianno.className} text-[60px] md:text-[68px]`}>
+            Che programmi?
+          </span>{" "}
+          <span className="text-[34px] md:text-[50px]">新行程？</span>
         </p>
         <div className="md:justify-self-end">
           <SearchPanel />
