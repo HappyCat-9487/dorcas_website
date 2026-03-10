@@ -1,9 +1,9 @@
-import { HERO_IMAGE, LOGO_IMAGE } from "@/src/components/home/constants";
-import { RegionTabs } from "@/src/components/home/region-tabs";
-import { SearchPanel } from "@/src/components/home/search-panel";
-import { SocialRail } from "@/src/components/home/social-rail";
-import styles from "@/src/components/home/homepage.module.css";
-import { Menu } from "lucide-react";
+import { HERO_IMAGE, LOGO_IMAGE } from "@/components/home/constants";
+import { RegionTabs } from "@/components/home/region-tabs";
+import { SearchPanel } from "@/components/home/search-panel";
+import { SocialRail } from "@/components/home/social-rail";
+import { MenuOverlay } from "@/components/nav/menu-overlay";
+import styles from "@/components/home/homepage.module.css";
 import { Italianno } from "next/font/google";
 
 const italianno = Italianno({
@@ -32,9 +32,7 @@ export function HomeHero() {
               alt="Dorcas Travel logo"
               className="h-[52px] w-auto object-contain md:h-[72px]"
             />
-            <button aria-label="Menu" className="absolute right-0 top-1 text-white md:top-3">
-              <Menu className="size-8 md:size-10" />
-            </button>
+          <MenuOverlay />
           </header>
 
           <div className="mt-3 md:mt-5">
@@ -48,7 +46,7 @@ export function HomeHero() {
             <br />
             una storia."
             <br />
-            每個角落，都是一個故事。
+            <span className="whitespace-nowrap">每個角落，都是一個故事。</span>
           </h1>
         </div>
 

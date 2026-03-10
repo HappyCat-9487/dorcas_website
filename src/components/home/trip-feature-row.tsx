@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
-import type { TripFeature } from "@/src/components/home/constants";
-import styles from "@/src/components/home/homepage.module.css";
+import type { TripFeature } from "@/components/home/constants";
+import styles from "@/components/home/homepage.module.css";
 
 export function TripFeatureRow({
   title,

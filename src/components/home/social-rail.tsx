@@ -1,6 +1,6 @@
 import { Facebook, Instagram, Sparkles } from "lucide-react";
 
-import styles from "@/src/components/home/homepage.module.css";
+import styles from "@/components/home/homepage.module.css";
 
 export function SocialRail() {
   return (

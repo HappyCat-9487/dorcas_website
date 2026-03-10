@@ -1,6 +1,6 @@
-import { tripFeatures } from "@/src/components/home/constants";
-import { HomeHero } from "@/src/components/home/home-hero";
-import { TripFeatureRow } from "@/src/components/home/trip-feature-row";
+import { tripFeatures } from "@/components/home/constants";
+import { HomeHero } from "@/components/home/home-hero";
+import { TripFeatureRow } from "@/components/home/trip-feature-row";
 
 export function Homepage() {
   return (

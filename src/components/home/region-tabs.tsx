@@ -1,4 +1,4 @@
-import { regionTabs } from "@/src/components/home/constants";
+import { regionTabs } from "@/components/home/constants";
 
 export function RegionTabs() {
   return (
