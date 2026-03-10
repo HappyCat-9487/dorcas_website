@@ -2,8 +2,9 @@ import { PageShell } from "@/components/nav/page-shell";
 
 const BANNER_IMAGE =
   "https://www.figma.com/api/mcp/asset/17fd03ae-eaff-411d-b0c8-f8fd8c4e74dd";
-const MAP_IMAGE =
-  "https://www.figma.com/api/mcp/asset/87bf9793-b502-4ec8-9ab3-ee87082c2d4e";
+
+const MAP_EMBED_URL =
+  "https://maps.google.com/maps?q=台北市中山區長安東路一段13號&t=&z=17&ie=UTF8&iwloc=&output=embed";
 
 const contactInfo = [
   { label: "公司名稱", value: "多加旅行社有限公司 Dorcas Travel Service Co., Ltd. (Dorcas Travel)" },
@@ -67,10 +68,13 @@ export default function ContactPage() {
 
           {/* Map */}
           <div className="overflow-hidden rounded-2xl md:w-[580px]">
-            <img
-              src={MAP_IMAGE}
-              alt="Office location map"
-              className="h-full w-full object-cover"
+            <iframe
+              src={MAP_EMBED_URL}
+              title="Dorcas Travel office location"
+              className="h-[300px] w-full border-0 md:h-[420px]"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
             />
           </div>
         </div>
