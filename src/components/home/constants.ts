@@ -5,14 +5,51 @@ export const LOGO_IMAGE =
 
 export const regionTabs = ["台灣", "亞洲", "美洲", "大洋洲", "歐洲", "非洲", "主題式"];
 
-export const regionDropdowns: Record<string, string[]> = {
-  台灣: ["北部", "中部", "南部", "東部", "離島"],
-  亞洲: ["日本", "韓國", "蒙古/俄羅斯", "東南亞"],
-  美洲: ["美國", "加拿大"],
-  大洋洲: ["澳洲", "紐西蘭"],
-  歐洲: ["北歐", "西歐", "南歐", "東歐"],
-  非洲: ["北非", "摩洛哥", "東非", "南非", "非洲其他"],
-  主題式: ["海島渡遊", "蜜月旅行", "冬季滑雪", "文化體驗", "櫻花季", "薰衣草季"],
+export type DropdownItem = { label: string; href: string };
+
+export const regionDropdowns: Record<string, DropdownItem[]> = {
+  台灣: [
+    { label: "北部", href: "/destinations/taiwan-north" },
+    { label: "中部", href: "/destinations/taiwan-central" },
+    { label: "南部", href: "/destinations/taiwan-south" },
+    { label: "東部", href: "/destinations/taiwan-east" },
+    { label: "離島", href: "/destinations/taiwan-islands" },
+  ],
+  亞洲: [
+    { label: "日本",       href: "/destinations/japan" },
+    { label: "韓國",       href: "/destinations/korea" },
+    { label: "蒙古/俄羅斯", href: "/destinations/mongolia-russia" },
+    { label: "東南亞",     href: "/destinations/southeast-asia" },
+  ],
+  美洲: [
+    { label: "美國",  href: "/destinations/usa" },
+    { label: "加拿大", href: "/destinations/canada" },
+  ],
+  大洋洲: [
+    { label: "澳洲",  href: "/destinations/australia" },
+    { label: "紐西蘭", href: "/destinations/new-zealand" },
+  ],
+  歐洲: [
+    { label: "北歐", href: "/destinations/north-europe" },
+    { label: "西歐", href: "/destinations/west-europe" },
+    { label: "南歐", href: "/destinations/south-europe" },
+    { label: "東歐", href: "/destinations/east-europe" },
+  ],
+  非洲: [
+    { label: "北非",   href: "/destinations/north-africa" },
+    { label: "摩洛哥", href: "/destinations/morocco" },
+    { label: "東非",   href: "/destinations/east-africa" },
+    { label: "南非",   href: "/destinations/south-africa" },
+    { label: "非洲其他", href: "/destinations/africa-other" },
+  ],
+  主題式: [
+    { label: "海島渡遊", href: "/destinations/island" },
+    { label: "蜜月旅行", href: "/destinations/honeymoon" },
+    { label: "冬季滑雪", href: "/destinations/ski" },
+    { label: "文化體驗", href: "/destinations/culture" },
+    { label: "櫻花季",  href: "/destinations/cherry-blossom" },
+    { label: "薰衣草季", href: "/destinations/lavender" },
+  ],
 };
 
 export type TripFeature = {

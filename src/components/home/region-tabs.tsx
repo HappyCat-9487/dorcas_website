@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { regionTabs, regionDropdowns } from "@/components/home/constants";
 
@@ -69,9 +70,10 @@ export function RegionTabs() {
                   : "pointer-events-none -translate-y-2 opacity-0"
               }`}
             >
-              {items.map((item, i) => (
-                <button
-                  key={item}
+              {items.map(({ label, href }, i) => (
+                <Link
+                  key={label}
+                  href={href}
                   role="option"
                   aria-selected={false}
                   onClick={() => setOpenTab(null)}
@@ -79,8 +81,8 @@ export function RegionTabs() {
                     i !== 0 ? "border-t border-black/10" : ""
                   }`}
                 >
-                  {item}
-                </button>
+                  {label}
+                </Link>
               ))}
             </div>
           </div>
