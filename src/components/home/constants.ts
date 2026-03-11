@@ -5,6 +5,16 @@ export const LOGO_IMAGE =
 
 export const regionTabs = ["台灣", "亞洲", "美洲", "大洋洲", "歐洲", "非洲", "主題式"];
 
+export const regionDropdowns: Record<string, string[]> = {
+  台灣: ["北部", "中部", "南部", "東部", "離島"],
+  亞洲: ["日本", "韓國", "蒙古/俄羅斯", "東南亞"],
+  美洲: ["美國", "加拿大"],
+  大洋洲: ["澳洲", "紐西蘭"],
+  歐洲: ["北歐", "西歐", "南歐", "東歐"],
+  非洲: ["北非", "摩洛哥", "東非", "南非", "非洲其他"],
+  主題式: ["海島渡遊", "蜜月旅行", "冬季滑雪", "文化體驗", "櫻花季", "薰衣草季"],
+};
+
 export type TripFeature = {
   title: string;
   imageUrl: string;
