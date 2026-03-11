@@ -17,6 +17,10 @@
 /.next/
 /out/
 
+#Figuers and icons
+/figures
+/icons
+
 # production
 /build
 
