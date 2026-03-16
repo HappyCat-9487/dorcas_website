@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Facebook, Instagram, Sparkles } from "lucide-react";
 
 import styles from "@/components/home/homepage.module.css";
@@ -26,13 +27,14 @@ export function SocialRail() {
       >
         <Facebook className="size-7" />
       </a>
-      <button
-        aria-label="AI 咨詢"
+      <Link
+        href="/ai-chat"
+        aria-label="AI 諮詢"
         className={`inline-flex items-center gap-1.5 rounded-2xl bg-black px-3 py-2 text-base text-white ${styles.aiPill}`}
       >
         <Sparkles className="size-4" />
         AI 諮詢
-      </button>
+      </Link>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { use, useState } from "react";
 import { PageShell } from "@/components/nav/page-shell";
 import { TourTabBar, type TourTab } from "@/components/tours/tab-bar";
 import { ItineraryStopCard } from "@/components/tours/itinerary-stop";
+import { DepartureTable } from "@/components/tours/departure-table";
 import { tourDetails } from "@/components/tours/data";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -45,11 +46,7 @@ export default function TourDetailPage({ params }: Props) {
 
         {/* 出發日＆資訊 */}
         {activeTab === "dates" && (
-          <div className="flex min-h-[340px] items-center justify-center bg-[#f5ca91]/40 px-5 py-16">
-            <p className="text-center text-[18px] text-black/50">
-              出發日期及資訊整理中，敬請期待。
-            </p>
-          </div>
+          <DepartureTable rows={tour.departures} />
         )}
 
         {/* 行程諮詢 */}

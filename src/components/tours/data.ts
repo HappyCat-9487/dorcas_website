@@ -5,11 +5,22 @@ export type ItineraryStop = {
   reverse?: boolean;
 };
 
+export type DepartureRow = {
+  date: string;
+  tourName: string;
+  days: number;
+  airline: string;
+  visa: string;
+  pricePerPerson: string;
+  status: "open" | "full";
+};
+
 export type TourDetail = {
   slug: string;
   title: string;
   heroImage: string;
   stops: ItineraryStop[];
+  departures: DepartureRow[];
 };
 
 export const tourDetails: Record<string, TourDetail> = {
@@ -17,6 +28,35 @@ export const tourDetails: Record<string, TourDetail> = {
     slug: "norway-aurora",
     title: "挪威極光之七日遊",
     heroImage: "/figures/NorwayAurora.jpg",
+    departures: [
+      {
+        date: "2026/5/17",
+        tourName: "挪威極光之七日遊",
+        days: 7,
+        airline: "長榮航空",
+        visa: "免簽",
+        pricePerPerson: "NT$ 179,000",
+        status: "full",
+      },
+      {
+        date: "2026/8/14",
+        tourName: "挪威極光之七日遊",
+        days: 7,
+        airline: "長榮航空",
+        visa: "免簽",
+        pricePerPerson: "NT$ 179,000",
+        status: "open",
+      },
+      {
+        date: "2026/9/28",
+        tourName: "挪威極光之七日遊",
+        days: 7,
+        airline: "中華航空",
+        visa: "免簽",
+        pricePerPerson: "NT$ 179,000",
+        status: "open",
+      },
+    ],
     stops: [
       {
         name: "維格蘭雕塑公園",

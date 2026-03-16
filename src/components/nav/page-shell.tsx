@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { MenuOverlay } from "@/components/nav/menu-overlay";
 import { RegionTabs } from "@/components/home/region-tabs";
+import { SocialRail } from "@/components/home/social-rail";
 
-const LOGO_IMAGE =
-  "https://www.figma.com/api/mcp/asset/6c7739d6-4bc4-46e3-aef8-a4f414f93327";
-
-export function PageShell({ children }: { children: React.ReactNode }) {
+export function PageShell({
+  children,
+  hideSocialRail = false,
+}: {
+  children: React.ReactNode;
+  hideSocialRail?: boolean;
+}) {
   return (
     <div className="min-h-screen bg-[#f5ca91] text-black">
       {/* ── Red header bar ─────────────────────────────────────── */}
@@ -13,7 +17,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
         <div className="relative mx-auto flex max-w-[1440px] items-center justify-center">
           <Link href="/" aria-label="Homepage">
             <img
-              src={LOGO_IMAGE}
+              src="/figures/logo-removebg.png"
               alt="Dorcas Travel logo"
               className="h-[52px] w-auto object-contain md:h-[72px]"
             />
@@ -27,6 +31,9 @@ export function PageShell({ children }: { children: React.ReactNode }) {
 
       {/* ── Page content ───────────────────────────────────────── */}
       <main>{children}</main>
+
+      {/* ── Fixed social rail — hidden on pages that opt out ───── */}
+      {!hideSocialRail && <SocialRail />}
     </div>
   );
 }
