@@ -17,9 +17,14 @@
 /.next/
 /out/
 
-#Figuers and icons
+# Local images and icons (don't commit binary assets)
 /figures
 /icons
+/public/figures
+/public/icons
+
+# pnpm global store (huge, not needed in repo)
+.pnpm-store/
 
 # production
 /build

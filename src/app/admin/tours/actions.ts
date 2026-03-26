@@ -40,7 +40,6 @@ async function syncCategories(
     const parentId = String(formData.get("parent_category_id") || "");
     const childId  = String(formData.get("child_category_id")  || "");
 
-    // wipe existing, then re-insert selected ones
     await sb.from("tour_categories").delete().eq("tour_id", tourId);
 
     const ids = [parentId, childId].filter(Boolean);
@@ -53,14 +52,16 @@ async function syncCategories(
 }
 
 export async function updateTour(tourId: string, formData: FormData) {
-    const title   = String(formData.get("title")   || "").trim();
-    const summary = String(formData.get("summary") || "");
-    const content = String(formData.get("content") || "");
+    const title      = String(formData.get("title")      || "").trim();
+    const summary    = String(formData.get("summary")    || "");
+    const price_from = String(formData.get("price_from") || "");
+    const start_date = String(formData.get("start_date") || "") || null;
+    const end_date   = String(formData.get("end_date")   || "") || null;
 
     const sb = supabaseService();
     const { error } = await sb
         .from("tours")
-        .update({ title, summary, content })
+        .update({ title, summary, price_from, start_date, end_date })
         .eq("id", tourId);
 
     if (error) throw new Error(error.message);
@@ -87,9 +88,11 @@ export async function publishTour(tourId: string) {
 }
 
 export async function publishTourWithSave(tourId: string, formData: FormData) {
-    const title   = String(formData.get("title")   || "").trim();
-    const summary = String(formData.get("summary") || "");
-    const content = String(formData.get("content") || "");
+    const title      = String(formData.get("title")      || "").trim();
+    const summary    = String(formData.get("summary")    || "");
+    const price_from = String(formData.get("price_from") || "");
+    const start_date = String(formData.get("start_date") || "") || null;
+    const end_date   = String(formData.get("end_date")   || "") || null;
 
     const sb = supabaseService();
     const { error } = await sb
@@ -97,7 +100,9 @@ export async function publishTourWithSave(tourId: string, formData: FormData) {
         .update({
             title,
             summary,
-            content,
+            price_from,
+            start_date,
+            end_date,
             status: "published",
             published_at: new Date().toISOString(),
         })
@@ -125,4 +130,85 @@ export async function unpublishTour(tourId: string) {
 
     revalidatePath(`/admin/tours/${tourId}`);
     revalidatePath("/tours");
+}
+
+// ── Cover image ───────────────────────────────────────────────────────────────
+
+export async function upsertCoverImage(tourId: string, path: string, alt: string) {
+    const sb = supabaseService();
+
+    // Remove any existing cover image row first
+    await sb
+        .from("tour_images")
+        .delete()
+        .eq("tour_id", tourId)
+        .eq("is_cover", true);
+
+    const { error } = await sb.from("tour_images").insert({
+        tour_id: tourId,
+        path,
+        alt: alt || null,
+        sort_order: 0,
+        is_cover: true,
+    });
+
+    if (error) throw new Error(error.message);
+
+    revalidatePath(`/admin/tours/${tourId}`);
+    revalidatePath(`/tours`);
+}
+
+// ── Tour stops ────────────────────────────────────────────────────────────────
+
+export type TourStopData = {
+    id?: string;
+    sort_order: number;
+    subtheme: string;
+    introduction: string;
+    image_path: string;
+    icon_path: string;
+};
+
+export async function upsertTourStop(tourId: string, stop: TourStopData) {
+    const sb = supabaseService();
+
+    if (stop.id) {
+        const { error } = await sb
+            .from("tour_stops")
+            .update({
+                sort_order:   stop.sort_order,
+                subtheme:     stop.subtheme,
+                introduction: stop.introduction,
+                image_path:   stop.image_path || null,
+                icon_path:    stop.icon_path  || null,
+            })
+            .eq("id", stop.id);
+        if (error) throw new Error(error.message);
+    } else {
+        const { error } = await sb.from("tour_stops").insert({
+            tour_id:      tourId,
+            sort_order:   stop.sort_order,
+            subtheme:     stop.subtheme,
+            introduction: stop.introduction,
+            image_path:   stop.image_path || null,
+            icon_path:    stop.icon_path  || null,
+        });
+        if (error) throw new Error(error.message);
+    }
+
+    revalidatePath(`/admin/tours/${tourId}`);
+    revalidatePath(`/tours`);
+}
+
+export async function deleteTourStop(stopId: string, tourId: string) {
+    const sb = supabaseService();
+    const { error } = await sb
+        .from("tour_stops")
+        .delete()
+        .eq("id", stopId);
+
+    if (error) throw new Error(error.message);
+
+    revalidatePath(`/admin/tours/${tourId}`);
+    revalidatePath(`/tours`);
 }
