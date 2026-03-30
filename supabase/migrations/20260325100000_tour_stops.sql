@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS public.tour_stops (
 ALTER TABLE public.tour_stops ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read for published tour stops (join via tours)
+DROP POLICY IF EXISTS "Public can read tour_stops for published tours" ON public.tour_stops;
 CREATE POLICY "Public can read tour_stops for published tours"
   ON public.tour_stops FOR SELECT
   USING (
@@ -36,6 +37,7 @@ CREATE POLICY "Public can read tour_stops for published tours"
   );
 
 -- Allow service role full access (admin operations use service role key)
+DROP POLICY IF EXISTS "Service role has full access to tour_stops" ON public.tour_stops;
 CREATE POLICY "Service role has full access to tour_stops"
   ON public.tour_stops FOR ALL
   USING (auth.role() = 'service_role')

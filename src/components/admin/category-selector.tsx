@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export type Category = {
     id: string;
@@ -21,6 +21,13 @@ export function CategorySelector({
 }: Props) {
     const [parentId, setParentId] = useState(initialParentId);
     const [childId, setChildId]   = useState(initialChildId);
+
+    // When the server re-renders (after save) with new initial ids,
+    // sync them into local state so selects reflect persisted values.
+    useEffect(() => {
+        setParentId(initialParentId);
+        setChildId(initialChildId);
+    }, [initialParentId, initialChildId]);
 
     const parents  = categories.filter((c) => c.parent_id === null);
     const children = categories.filter((c) => c.parent_id === parentId);

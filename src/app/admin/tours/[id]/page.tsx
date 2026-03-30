@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { supabaseService } from "@/lib/supabase/server";
+import { todayISODateInTimeZone, TOUR_DATE_TZ } from "@/lib/tour-dates";
 import { publishTourWithSave, unpublishTour, updateTour } from "../actions";
-import { CategorySelector } from "@/components/admin/category-selector";
+import { AdminTourInfoForm } from "@/components/admin/admin-tour-info-form";
 import { CoverImageUploader } from "@/components/admin/cover-image-uploader";
 import { StopsEditor } from "@/components/admin/stops-editor";
 import type { Category } from "@/components/admin/category-selector";
@@ -16,7 +18,7 @@ export default async function AdminTourEditPage({
     const [tourRes, categoriesRes, tourCatsRes, coverRes, stopsRes] = await Promise.all([
         sb
             .from("tours")
-            .select("id, title, summary, price_from, start_date, end_date, status, slug")
+            .select("id, title, summary, price_from, start_date, end_date, status, slug, updated_at")
             .eq("id", id)
             .single(),
         sb
@@ -72,13 +74,22 @@ export default async function AdminTourEditPage({
     }
 
     const isPublished = tour.status === "published";
+    const minDate = todayISODateInTimeZone(TOUR_DATE_TZ);
 
     return (
         <main className="min-h-screen bg-[#fdf7ee] p-6 space-y-5">
 
             {/* ── Header bar ───────────────────────────────────────────── */}
             <div className="flex items-center justify-between rounded-xl bg-[#f5ca91]/40 px-5 py-3 border border-[#e8c9a0]">
-                <h1 className="text-xl font-bold text-[#7a4020]">✏️ Edit Tour</h1>
+                <div className="flex items-center gap-3">
+                    <Link
+                        href="/admin/tours"
+                        className="rounded-lg border border-[#e8c9a0] bg-white px-3 py-1.5 text-xs font-medium text-[#7a4020] transition-colors hover:bg-[#f5ca91]/30"
+                    >
+                        ← 返回
+                    </Link>
+                    <h1 className="text-xl font-bold text-[#7a4020]">✏️ Edit Tour</h1>
+                </div>
                 <div className="flex items-center gap-2 text-sm text-[#7a4020]/70">
                     <span
                         className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
@@ -97,119 +108,24 @@ export default async function AdminTourEditPage({
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_390px]">
 
                 {/* ── Left: text fields ──────────────────────────────── */}
-                <form className="space-y-4 rounded-xl border border-[#e8c9a0] bg-white p-6">
-                    <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-[#b83553]">
-                        行程資訊
-                    </h2>
-
-                    {/* Title */}
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium text-[#7a4020]">Title（行程名稱）</label>
-                        <input
-                            name="title"
-                            defaultValue={tour.title}
-                            required
-                            className="w-full rounded-lg border border-[#e8c9a0] bg-[#fdf7ee] px-3 py-2 text-sm focus:border-[#e8928a] focus:outline-none"
-                        />
-                    </div>
-
-                    {/* Summary */}
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium text-[#7a4020]">Summary（簡介）</label>
-                        <input
-                            name="summary"
-                            defaultValue={tour.summary ?? ""}
-                            className="w-full rounded-lg border border-[#e8c9a0] bg-[#fdf7ee] px-3 py-2 text-sm focus:border-[#e8928a] focus:outline-none"
-                        />
-                    </div>
-
-                    {/* Price — numbers only, stored as raw digits e.g. "179000" */}
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium text-[#7a4020]">
-                            起始價格（台幣，Price from）
-                        </label>
-                        <div className="flex items-center gap-0 overflow-hidden rounded-lg border border-[#e8c9a0] focus-within:border-[#e8928a]">
-                            <span className="shrink-0 border-r border-[#e8c9a0] bg-[#f5ca91]/30 px-3 py-2 text-sm font-medium text-[#7a4020]">
-                                NT$
-                            </span>
-                            <input
-                                name="price_from"
-                                type="number"
-                                min="0"
-                                step="1000"
-                                defaultValue={tour.price_from ?? ""}
-                                placeholder="179000"
-                                className="w-full bg-[#fdf7ee] px-3 py-2 text-sm focus:outline-none"
-                            />
-                        </div>
-                        <p className="text-xs text-[#7a4020]/40">只輸入數字，例如 179000</p>
-                    </div>
-
-                    {/* Date range — calendar pickers */}
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium text-[#7a4020]">
-                            出發日期範圍
-                        </label>
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                                <span className="text-xs text-[#7a4020]/50">起始日期</span>
-                                <input
-                                    name="start_date"
-                                    type="date"
-                                    defaultValue={tour.start_date ?? ""}
-                                    className="w-full rounded-lg border border-[#e8c9a0] bg-[#fdf7ee] px-3 py-2 text-sm text-[#7a4020] focus:border-[#e8928a] focus:outline-none"
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <span className="text-xs text-[#7a4020]/50">結束日期</span>
-                                <input
-                                    name="end_date"
-                                    type="date"
-                                    defaultValue={tour.end_date ?? ""}
-                                    className="w-full rounded-lg border border-[#e8c9a0] bg-[#fdf7ee] px-3 py-2 text-sm text-[#7a4020] focus:border-[#e8928a] focus:outline-none"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Category */}
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium text-[#7a4020]">Category（地區分類）</label>
-                        <CategorySelector
-                            categories={categories}
-                            initialParentId={savedParent?.id ?? ""}
-                            initialChildId={savedChild?.id ?? ""}
-                        />
-                    </div>
-
-                    {/* Action buttons */}
-                    <div className="flex flex-wrap gap-2 border-t border-[#e8c9a0] pt-4">
-                        <button
-                            formAction={onSave}
-                            className="rounded-lg border border-[#e8c9a0] bg-white px-5 py-2 text-sm font-medium text-[#7a4020] transition-colors hover:bg-[#f5ca91]/30"
-                        >
-                            儲存草稿
-                        </button>
-
-                        {!isPublished && (
-                            <button
-                                formAction={onPublish}
-                                className="rounded-lg bg-[#e8928a] px-5 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                            >
-                                儲存並發佈
-                            </button>
-                        )}
-
-                        {isPublished && (
-                            <button
-                                formAction={onUnpublish}
-                                className="rounded-lg border border-[#e8928a] px-5 py-2 text-sm font-medium text-[#e8928a] transition-colors hover:bg-[#e8928a]/10"
-                            >
-                                取消發佈
-                            </button>
-                        )}
-                    </div>
-                </form>
+                <AdminTourInfoForm
+                    minDate={minDate}
+                    tour={{
+                        title: tour.title,
+                        summary: tour.summary,
+                        price_from: tour.price_from,
+                        start_date: tour.start_date,
+                        end_date: tour.end_date,
+                        updated_at: tour.updated_at,
+                    }}
+                    categories={categories}
+                    savedParentId={savedParent?.id ?? ""}
+                    savedChildId={savedChild?.id ?? ""}
+                    isPublished={isPublished}
+                    saveAction={onSave}
+                    publishAction={onPublish}
+                    unpublishAction={onUnpublish}
+                />
 
                 {/* ── Right: images ──────────────────────────────────── */}
                 <aside className="space-y-5">
@@ -218,7 +134,11 @@ export default async function AdminTourEditPage({
                         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-[#b83553]">
                             封面圖片
                         </h2>
-                        <CoverImageUploader tourId={id} currentPath={coverPath} />
+                        <CoverImageUploader
+                            key={coverPath ?? "no-cover"}
+                            tourId={id}
+                            currentPath={coverPath}
+                        />
                     </div>
 
                     {/* Stops editor card */}
@@ -226,7 +146,11 @@ export default async function AdminTourEditPage({
                         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-[#b83553]">
                             行程景點
                         </h2>
-                        <StopsEditor tourId={id} initialStops={stops} />
+                        <StopsEditor
+                            key={stops.map((s) => s.id).join("-")}
+                            tourId={id}
+                            initialStops={stops}
+                        />
                     </div>
                 </aside>
             </div>

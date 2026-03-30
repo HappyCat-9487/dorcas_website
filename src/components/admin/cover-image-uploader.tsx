@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { upsertCoverImage } from "@/app/admin/tours/actions";
 
@@ -9,12 +9,35 @@ type Props = {
     currentPath?: string | null;
 };
 
+function withCacheBuster(url: string) {
+    const hasQuery = url.includes("?");
+    return `${url}${hasQuery ? "&" : "?"}v=${Date.now()}`;
+}
+
+function getStorageObjectPathFromPublicUrl(publicUrl: string) {
+    // Example:
+    // https://<project>.supabase.co/storage/v1/object/public/tour-assets/covers/<tourId>/cover-xxx.jpg
+    const marker = "/storage/v1/object/public/tour-assets/";
+    const idx = publicUrl.indexOf(marker);
+    if (idx === -1) return null;
+    return publicUrl.slice(idx + marker.length).split("?")[0] || null; // path inside bucket
+}
+
 export function CoverImageUploader({ tourId, currentPath }: Props) {
+    // SSR + first client paint must match (no Date.now) — avoids hydration mismatch.
     const [preview, setPreview] = useState<string | null>(currentPath ?? null);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [, startTransition] = useTransition();
     const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (!currentPath) {
+            setPreview(null);
+            return;
+        }
+        setPreview(withCacheBuster(currentPath));
+    }, [currentPath]);
 
     async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -29,8 +52,8 @@ export function CoverImageUploader({ tourId, currentPath }: Props) {
         setError(null);
         setUploading(true);
 
-        const ext = file.name.split(".").pop();
-        const storagePath = `covers/${tourId}/cover.${ext}`;
+        const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+        const storagePath = `covers/${tourId}/cover-${Date.now()}.${ext}`;
         const sb = supabaseBrowser();
 
         const { error: uploadError } = await sb.storage
@@ -48,10 +71,19 @@ export function CoverImageUploader({ tourId, currentPath }: Props) {
             .getPublicUrl(storagePath);
 
         const publicUrl = urlData.publicUrl;
-        setPreview(publicUrl);
+        setPreview(withCacheBuster(publicUrl));
 
         startTransition(async () => {
+            // 1) Save new public URL to DB
             await upsertCoverImage(tourId, publicUrl, file.name);
+
+            // 2) Best-effort delete previous cover object (avoid storage growth)
+            if (currentPath && currentPath !== publicUrl) {
+                const oldObjectPath = getStorageObjectPathFromPublicUrl(currentPath);
+                if (oldObjectPath) {
+                    await sb.storage.from("tour-assets").remove([oldObjectPath]);
+                }
+            }
         });
 
         setUploading(false);

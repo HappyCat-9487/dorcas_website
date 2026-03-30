@@ -105,16 +105,24 @@ export function TourDetailClient({
         {activeTab === "overview" && (
           <div className="mx-auto max-w-[1320px] space-y-10 px-5 pb-16 pt-10 md:space-y-16 md:px-10 md:pb-24 md:pt-14">
             {stops.length > 0 ? (
-              stops.map((stop, i) => (
+              (() => {
+                let lastIcon: string | undefined;
+                return stops.map((stop, i) => {
+                  const own = stop.icon_path?.trim();
+                  const iconUrl = own ? own : lastIcon;
+                  if (own) lastIcon = own;
+                  return (
                 <ItineraryStopCard
                   key={stop.subtheme + i}
                   name={stop.subtheme}
                   description={stop.introduction ?? ""}
                   imageUrl={stop.image_path ?? ""}
-                  iconUrl={stop.icon_path ?? undefined}
+                  iconUrl={iconUrl ?? undefined}
                   reverse={i % 2 === 1}
                 />
-              ))
+                  );
+                });
+              })()
             ) : (
               <p className="text-center text-gray-400">行程景點尚未新增。</p>
             )}

@@ -31,6 +31,17 @@ type Props = {
     }[];
 };
 
+/** If this stop has no icon, use the nearest previous stop's icon (for save + display). */
+function inheritedIconPath(stops: StopRow[], idx: number): string {
+    const cur = stops[idx]?.icon_path?.trim();
+    if (cur) return cur;
+    for (let i = idx - 1; i >= 0; i--) {
+        const p = stops[i]?.icon_path?.trim();
+        if (p) return p;
+    }
+    return "";
+}
+
 function makeEmpty(sort_order: number): StopRow {
     return {
         sort_order,
@@ -78,12 +89,14 @@ export function StopsEditor({ tourId, initialStops }: Props) {
 
     async function removeStop(idx: number) {
         const stop = stops[idx];
-        if (stop.id) {
-            await deleteTourStop(stop.id, tourId);
+        if (!stop.id) {
+            setStops((prev) =>
+                prev.filter((_, i) => i !== idx).map((s, i) => ({ ...s, sort_order: i })),
+            );
+            return;
         }
-        setStops((prev) =>
-            prev.filter((_, i) => i !== idx).map((s, i) => ({ ...s, sort_order: i })),
-        );
+        await deleteTourStop(stop.id, tourId);
+        // deleteTourStop 成功後會 redirect 回本頁，列表會與資料庫同步
     }
 
     async function uploadFile(idx: number, file: File, kind: "image" | "icon") {
@@ -118,11 +131,12 @@ export function StopsEditor({ tourId, initialStops }: Props) {
             .getPublicUrl(storagePath);
 
         const publicUrl = urlData.publicUrl;
+        const previewUrl = `${publicUrl}?v=${Date.now()}`;
 
         if (kind === "image") {
-            updateStop(idx, { image_path: publicUrl, imagePreview: publicUrl, saving: false });
+            updateStop(idx, { image_path: publicUrl, imagePreview: previewUrl, saving: false });
         } else {
-            updateStop(idx, { icon_path: publicUrl, iconPreview: publicUrl, saving: false });
+            updateStop(idx, { icon_path: publicUrl, iconPreview: previewUrl, saving: false });
         }
     }
 
@@ -135,19 +149,24 @@ export function StopsEditor({ tourId, initialStops }: Props) {
 
         updateStop(idx, { saving: true, error: null });
 
+        const resolvedIcon = inheritedIconPath(stops, idx);
         const payload: TourStopData = {
             id: stop.id,
             sort_order: idx,
             subtheme: stop.subtheme,
             introduction: stop.introduction,
             image_path: stop.image_path,
-            icon_path: stop.icon_path,
+            icon_path: resolvedIcon,
         };
 
         startTransition(async () => {
             try {
                 await upsertTourStop(tourId, payload);
-                updateStop(idx, { saving: false });
+                updateStop(idx, {
+                    saving: false,
+                    icon_path: resolvedIcon,
+                    iconPreview: resolvedIcon || "",
+                });
             } catch (e) {
                 updateStop(idx, { saving: false, error: String(e) });
             }
@@ -175,7 +194,7 @@ export function StopsEditor({ tourId, initialStops }: Props) {
 
             {stops.map((stop, idx) => (
                 <div
-                    key={idx}
+                    key={stop.id ?? `new-${idx}`}
                     className="rounded-xl border border-[#e8c9a0] bg-[#fdf7ee] p-4 space-y-3"
                 >
                     {/* Stop header */}
@@ -269,23 +288,35 @@ export function StopsEditor({ tourId, initialStops }: Props) {
                             />
                         </div>
 
-                        {/* Icon (PNG only) */}
+                        {/* Icon (PNG only) — 未上傳時預覽沿用上一景點（儲存時會寫入 DB） */}
                         <div className="space-y-1">
                             <label className="text-xs font-medium text-[#7a4020]">
                                 小圖示 Icon
                                 <span className="ml-1 text-[10px] text-[#7a4020]/40">PNG</span>
                             </label>
-                            {stop.iconPreview ? (
+                            {(() => {
+                                const inherited = inheritedIconPath(stops, idx);
+                                const iconVisual = stop.iconPreview || inherited;
+                                const isInheritedOnly =
+                                    !stop.icon_path?.trim() && !!inherited && idx > 0;
+                                return iconVisual ? (
+                                <div className="space-y-1">
                                 <div
                                     className="flex h-24 cursor-pointer items-center justify-center rounded-lg border-2 border-[#e8c9a0] bg-white transition-colors hover:border-[#e8928a]"
                                     onClick={() => iconInputRefs.current[idx]?.click()}
                                 >
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
-                                        src={stop.iconPreview}
+                                        src={iconVisual}
                                         alt="icon preview"
                                         className="size-12 object-contain"
                                     />
+                                </div>
+                                {isInheritedOnly && (
+                                    <p className="text-[10px] text-[#7a4020]/50">
+                                        預覽沿用上一景點；按「儲存此景點」後會寫入資料庫
+                                    </p>
+                                )}
                                 </div>
                             ) : (
                                 <button
@@ -298,7 +329,8 @@ export function StopsEditor({ tourId, initialStops }: Props) {
                                     </svg>
                                     上傳 Icon
                                 </button>
-                            )}
+                            );
+                            })()}
                             <input
                                 ref={(el) => { iconInputRefs.current[idx] = el; }}
                                 type="file"
