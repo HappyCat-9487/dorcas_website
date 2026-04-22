@@ -1,6 +1,7 @@
 import { PageShell } from "@/components/nav/page-shell";
+import { getSiteSetting } from "@/lib/site-settings";
 
-const HERO_IMAGE =
+const FALLBACK_HERO_IMAGE =
   "https://www.figma.com/api/mcp/asset/fd02678e-1a38-4955-bb67-92519295b995";
 
 const rules = [
@@ -10,13 +11,14 @@ const rules = [
   "依航空公司規定，消費者於同一家航空公司不得有兩個（或以上）之訂位紀錄（同一旅客訂購同一家航空公司之相關航班日期者是為重複訂位），如因重複定位被航空公司取消機位所造成之損失，本公司恕不負責。",
 ];
 
-export default function BookingExplainPage() {
+export default async function BookingExplainPage() {
+  const heroUrl = (await getSiteSetting("booking_explain_hero_image")) ?? FALLBACK_HERO_IMAGE;
   return (
     <PageShell>
       {/* ── Hero image ─────────────────────────────────────────── */}
       <div className="h-[280px] w-full overflow-hidden md:h-[499px]">
         <img
-          src={HERO_IMAGE}
+          src={heroUrl}
           alt="中正紀念堂"
           className="h-full w-full object-cover"
         />

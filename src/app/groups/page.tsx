@@ -1,20 +1,22 @@
 import { Italianno } from "next/font/google";
 import { PageShell } from "@/components/nav/page-shell";
 import { GroupTable } from "@/components/groups/group-table";
+import { getSiteSetting } from "@/lib/site-settings";
 
 const italianno = Italianno({ subsets: ["latin"], weight: "400" });
 
 // airplane-wing-at-sunset photo (replace with Figma asset once MCP limit resets)
-const BANNER_IMAGE =
+const FALLBACK_BANNER_IMAGE =
   "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1440&q=80";
 
-export default function GroupsPage() {
+export default async function GroupsPage() {
+  const bannerUrl = (await getSiteSetting("groups_hero_image")) ?? FALLBACK_BANNER_IMAGE;
   return (
     <PageShell>
       {/* ── Hero banner ─────────────────────────────────────────────── */}
       <div className="relative h-[260px] overflow-hidden md:h-[380px]">
         <img
-          src={BANNER_IMAGE}
+          src={bannerUrl}
           alt="出團一覽表"
           className="absolute inset-0 h-full w-full object-cover"
         />

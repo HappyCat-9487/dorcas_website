@@ -1,7 +1,5 @@
 import { PageShell } from "@/components/nav/page-shell";
-
-const BANNER_IMAGE =
-  "https://www.figma.com/api/mcp/asset/17fd03ae-eaff-411d-b0c8-f8fd8c4e74dd";
+import { getSiteSetting } from "@/lib/site-settings";
 
 const MAP_EMBED_URL =
   "https://maps.google.com/maps?q=台北市中山區長安東路一段13號&t=&z=17&ie=UTF8&iwloc=&output=embed";
@@ -18,7 +16,9 @@ const contactInfo = [
   { label: "交通甲", value: "354500 北1407" },
 ];
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const bannerUrl = await getSiteSetting("contact_banner_image");
+
   return (
     <PageShell>
       {/* ── Rounded card container ─────────────────────────────── */}
@@ -26,11 +26,15 @@ export default function ContactPage() {
 
         {/* Banner with title overlay */}
         <div className="relative h-[200px] overflow-hidden rounded-[32px] md:h-[286px] md:rounded-[50px]">
-          <img
-            src={BANNER_IMAGE}
-            alt="Contact us banner"
-            className="h-full w-full object-cover"
-          />
+          {bannerUrl ? (
+            <img
+              src={bannerUrl}
+              alt="Contact us banner"
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="h-full w-full bg-[#b87a5a]" />
+          )}
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/20">
             <p className="text-[32px] font-semibold leading-tight text-white drop-shadow-[0_4px_20px_#3830cb] md:text-[44px]">
               聯絡我們

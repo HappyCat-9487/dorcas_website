@@ -21,9 +21,11 @@ type Props = {
     savedParentId: string;
     savedChildId: string;
     isPublished: boolean;
+    isFeaturedOnHome: boolean;
     saveAction: (formData: FormData) => Promise<void>;
     publishAction: (formData: FormData) => Promise<void>;
     unpublishAction: () => Promise<void>;
+    toggleFeaturedOnHomeAction: () => Promise<void>;
 };
 
 const dateInputBase =
@@ -39,9 +41,11 @@ export function AdminTourInfoForm({
     savedParentId,
     savedChildId,
     isPublished,
+    isFeaturedOnHome,
     saveAction,
     publishAction,
     unpublishAction,
+    toggleFeaturedOnHomeAction,
 }: Props) {
     const [dateError, setDateError] = useState<string | null>(null);
 
@@ -221,7 +225,35 @@ export function AdminTourInfoForm({
                         取消發佈
                     </button>
                 )}
+
+                {isPublished && (
+                    <button
+                        type="submit"
+                        formAction={toggleFeaturedOnHomeAction}
+                        data-skip-date-validation="true"
+                        className={
+                            isFeaturedOnHome
+                                ? "rounded-lg border border-[#7a4020] bg-[#fdf7ee] px-5 py-2 text-sm font-medium text-[#7a4020] transition-colors hover:bg-[#f5ca91]/30"
+                                : "rounded-lg bg-[#7a4020] px-5 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                        }
+                        title={
+                            isFeaturedOnHome
+                                ? "此行程已顯示於首頁，點擊可從首頁移除"
+                                : "點擊後此行程會顯示在首頁"
+                        }
+                    >
+                        {isFeaturedOnHome ? "已在主頁（點擊移除）" : "也發佈主頁"}
+                    </button>
+                )}
             </div>
+
+            {isPublished && (
+                <p className="text-xs text-[#7a4020]/50">
+                    {isFeaturedOnHome
+                        ? "✨ 這個行程會出現在首頁「行程精選」區。"
+                        : "首頁自動依最接近的出發日補滿 3 則，若想確定顯示，點「也發佈主頁」。"}
+                </p>
+            )}
         </form>
     );
 }

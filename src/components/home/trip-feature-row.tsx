@@ -1,13 +1,14 @@
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { TripFeature } from "@/components/home/constants";
-import styles from "@/components/home/homepage.module.css";
 
 export function TripFeatureRow({
   title,
   imageUrl,
+  summary,
+  href,
   reverse = false,
   imageHeightClass,
-  detailHeightClass,
 }: TripFeature) {
   return (
     <article className="grid items-start gap-5 md:gap-8 md:grid-cols-2">
@@ -20,17 +21,39 @@ export function TripFeatureRow({
           reverse && "md:order-2",
         )}
       />
-      <div className={cn(reverse && "md:order-1")}>
-        <h3 className="border-b border-black pb-1 text-[32px] leading-tight md:text-[40px]">{title}</h3>
-        <div
-          className={cn(
-            `mt-2.5 flex items-center justify-center bg-[#88786b] px-6 text-center text-[40px] leading-tight text-white ${styles.detailBox} md:mt-3 md:px-8 md:text-[48px]`,
-            detailHeightClass ?? "h-[320px]",
-          )}
-        >
-          細節填寫區
+
+      <div
+        className={cn(
+          "flex h-full flex-col justify-between",
+          reverse && "md:order-1",
+        )}
+      >
+        <div>
+          <h3 className="border-b border-black pb-2 text-[32px] leading-tight md:text-[40px]">
+            {title}
+          </h3>
+
+          {summary ? (
+            <p className="mt-4 whitespace-pre-line text-[16px] leading-relaxed text-black/75 md:mt-6 md:text-[19px]">
+              {summary}
+            </p>
+          ) : null}
         </div>
-        <p className="mt-1.5 text-right text-[16px] md:mt-2 md:text-[20px]">按此了解更多</p>
+
+        <div className="mt-6 flex justify-end md:mt-8">
+          {href ? (
+            <Link
+              href={href}
+              className="inline-flex items-center rounded-full border border-black/20 bg-white/40 px-5 py-2 text-[15px] font-medium text-black/80 transition-colors hover:border-black hover:bg-white hover:text-black md:text-[17px]"
+            >
+              按此了解更多
+            </Link>
+          ) : (
+            <span className="text-[15px] text-black/60 md:text-[17px]">
+              按此了解更多
+            </span>
+          )}
+        </div>
       </div>
     </article>
   );

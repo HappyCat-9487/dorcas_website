@@ -1,4 +1,4 @@
-import { HERO_IMAGE, LOGO_IMAGE } from "@/components/home/constants";
+import { getSiteSettings, FALLBACKS } from "@/lib/site-settings";
 import { RegionTabs } from "@/components/home/region-tabs";
 import { SearchPanel } from "@/components/home/search-panel";
 import { SocialRail } from "@/components/home/social-rail";
@@ -11,27 +11,36 @@ const italianno = Italianno({
   weight: "400",
 });
 
-export function HomeHero() {
+export async function HomeHero() {
+  const settings  = await getSiteSettings();
+  const HERO_IMAGE = settings["hero_image"]  ?? null;
+  const LOGO_IMAGE = settings["logo_image"]  ?? FALLBACKS["logo_image"];
   return (
     <section className="bg-[#f5ca91]">
       {/* ── Hero photo zone ─────────────────────────────────────────── */}
       <div className="relative h-[420px] overflow-hidden md:h-[580px]">
-        <img
-          src={HERO_IMAGE}
-          alt="Travel beach hero"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
+        {HERO_IMAGE ? (
+          <img
+            src={HERO_IMAGE}
+            alt="Travel beach hero"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-[#c9a060]" />
+        )}
         {/* dark gradient so text is readable */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/10 to-black/55" />
 
         {/* ── Content inside the photo ──────────────────────────────── */}
         <div className="relative z-10 mx-auto h-full max-w-[1440px] px-5 pt-5 md:px-10 md:pt-7">
           <header className="relative flex items-center justify-center">
-            <img
-              src={LOGO_IMAGE}
-              alt="Dorcas Travel logo"
-              className="h-[52px] w-auto object-contain md:h-[72px]"
-            />
+            {LOGO_IMAGE ? (
+              <img
+                src={LOGO_IMAGE}
+                alt="Dorcas Travel logo"
+                className="h-[52px] w-auto object-contain md:h-[72px]"
+              />
+            ) : null}
           <MenuOverlay />
           </header>
 

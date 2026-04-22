@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabaseService } from "@/lib/supabase/server";
 import { createTour } from "./actions";
+import { signOut } from "../login/actions";
 
 export default async function AdminToursPage() {
     const sb = supabaseService();
@@ -14,10 +15,34 @@ export default async function AdminToursPage() {
 
             {/* Header */}
             <div className="flex items-center justify-between rounded-xl bg-[#f5ca91]/40 px-5 py-3 border border-[#e8c9a0]">
-                <h1 className="text-xl font-bold text-[#7a4020]">🗺️ 行程管理</h1>
-                <span className="text-sm text-[#7a4020]/50">
-                    共 {tours?.length ?? 0} 個行程
-                </span>
+                <div className="flex items-center gap-3">
+                    <h1 className="text-xl font-bold text-[#7a4020]">🗺️ 行程管理</h1>
+                    <Link
+                        href="/admin/destinations"
+                        className="rounded-lg border border-[#e8c9a0] bg-white px-3 py-1.5 text-xs font-medium text-[#7a4020] transition-colors hover:bg-[#f5ca91]/30"
+                    >
+                        🏞️ 地區頁面
+                    </Link>
+                    <Link
+                        href="/admin/settings"
+                        className="rounded-lg border border-[#e8c9a0] bg-white px-3 py-1.5 text-xs font-medium text-[#7a4020] transition-colors hover:bg-[#f5ca91]/30"
+                    >
+                        ⚙️ 網站設定
+                    </Link>
+                </div>
+                <div className="flex items-center gap-3">
+                    <span className="text-sm text-[#7a4020]/50">
+                        共 {tours?.length ?? 0} 個行程
+                    </span>
+                    <form action={signOut}>
+                        <button
+                            type="submit"
+                            className="rounded-lg border border-[#e8c9a0] bg-white px-3 py-1.5 text-xs font-medium text-[#7a4020] transition-colors hover:bg-[#f5ca91]/30"
+                        >
+                            登出
+                        </button>
+                    </form>
+                </div>
             </div>
 
             {/* Create new tour */}

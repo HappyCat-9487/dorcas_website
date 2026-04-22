@@ -8,12 +8,16 @@ export const regionTabs = ["台灣", "亞洲", "美洲", "大洋洲", "歐洲", 
 export type DropdownItem = { label: string; href: string };
 
 export const regionDropdowns: Record<string, DropdownItem[]> = {
+  // slugs below match the `categories.slug` column in Supabase,
+  // not an arbitrary URL convention. If you add a new category in
+  // the DB, add its slug here (and vice versa).
   台灣: [
-    { label: "北部", href: "/destinations/taiwan-north" },
-    { label: "中部", href: "/destinations/taiwan-central" },
-    { label: "南部", href: "/destinations/taiwan-south" },
-    { label: "東部", href: "/destinations/taiwan-east" },
-    { label: "離島", href: "/destinations/taiwan-islands" },
+    { label: "北部", href: "/destinations/north" },
+    { label: "中部", href: "/destinations/central" },
+    { label: "南部", href: "/destinations/south" },
+    { label: "東部", href: "/destinations/east" },
+    { label: "離島", href: "/destinations/islands" },
+    { label: "郵輪", href: "/destinations/cruise" },
   ],
   亞洲: [
     { label: "日本",       href: "/destinations/japan" },
@@ -30,31 +34,35 @@ export const regionDropdowns: Record<string, DropdownItem[]> = {
     { label: "紐西蘭", href: "/destinations/new-zealand" },
   ],
   歐洲: [
-    { label: "北歐", href: "/destinations/north-europe" },
-    { label: "西歐", href: "/destinations/west-europe" },
-    { label: "南歐", href: "/destinations/south-europe" },
-    { label: "東歐", href: "/destinations/east-europe" },
+    { label: "北歐", href: "/destinations/northern-europe" },
+    { label: "西歐", href: "/destinations/western-europe" },
+    { label: "南歐", href: "/destinations/southern-europe" },
+    { label: "東歐", href: "/destinations/eastern-europe" },
   ],
   非洲: [
-    { label: "北非",   href: "/destinations/north-africa" },
+    { label: "北非",   href: "/destinations/northern-africa" },
     { label: "摩洛哥", href: "/destinations/morocco" },
-    { label: "東非",   href: "/destinations/east-africa" },
-    { label: "南非",   href: "/destinations/south-africa" },
-    { label: "非洲其他", href: "/destinations/africa-other" },
+    { label: "東非",   href: "/destinations/eastern-africa" },
+    { label: "南非",   href: "/destinations/southern-africa" },
+    { label: "非洲其他", href: "/destinations/others-africa" },
   ],
   主題式: [
-    { label: "海島渡遊", href: "/destinations/island" },
+    { label: "海島漫遊", href: "/destinations/island-hopping" },
     { label: "蜜月旅行", href: "/destinations/honeymoon" },
-    { label: "冬季滑雪", href: "/destinations/ski" },
-    { label: "文化體驗", href: "/destinations/culture" },
-    { label: "櫻花季",  href: "/destinations/cherry-blossom" },
-    { label: "薰衣草季", href: "/destinations/lavender" },
+    { label: "冬季滑雪", href: "/destinations/winter-skiing" },
+    { label: "文化體驗", href: "/destinations/cultural-experience" },
+    { label: "櫻花季",  href: "/destinations/sakura-season" },
+    { label: "薰衣草季", href: "/destinations/lavender-season" },
   ],
 };
 
 export type TripFeature = {
   title: string;
   imageUrl: string;
+  /** Short blurb shown in the detail box (replaces the "細節填寫區" placeholder). */
+  summary?: string;
+  /** If set, "按此了解更多" becomes a link to this URL (e.g. /tours/{slug}). */
+  href?: string;
   reverse?: boolean;
   imageHeightClass?: string;
   detailHeightClass?: string;

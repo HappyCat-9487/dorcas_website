@@ -14,6 +14,33 @@ function slugify(text: string) {
         .replace(/-+/g, "-");
 }
 
+/**
+ * Pick a slug that won't collide with any other tour.
+ * If `base` is already in use by a different tour, tack on `-2`, `-3`, …
+ * until we find a free one. Pass `excludeTourId` when editing so the tour's
+ * own existing slug doesn't count as "taken".
+ */
+async function ensureUniqueSlug(
+    sb: ReturnType<typeof supabaseService>,
+    base: string,
+    excludeTourId?: string,
+): Promise<string> {
+    if (!base) throw new Error("Title cannot be empty (slug would be empty)");
+
+    let candidate = base;
+    for (let i = 2; i < 1000; i++) {
+        const query = sb.from("tours").select("id").eq("slug", candidate);
+        const { data, error } = await query;
+        if (error) throw new Error(error.message);
+
+        const taken = (data ?? []).some((row) => row.id !== excludeTourId);
+        if (!taken) return candidate;
+
+        candidate = `${base}-${i}`;
+    }
+    throw new Error("Unable to generate unique slug");
+}
+
 export async function createTour(formData: FormData) {
     const title = String(formData.get("title") || "").trim();
     if (!title) throw new Error("Title is required");
@@ -62,11 +89,22 @@ export async function updateTour(tourId: string, formData: FormData) {
     const start_date = startRaw;
     const end_date   = endRaw;
 
+    if (!title) throw new Error("Title is required");
+
     const sb = supabaseService();
+    const slug = await ensureUniqueSlug(sb, slugify(title), tourId);
+
+    const { data: oldRow } = await sb
+        .from("tours")
+        .select("slug")
+        .eq("id", tourId)
+        .maybeSingle();
+
     const { error } = await sb
         .from("tours")
         .update({
             title,
+            slug,
             summary,
             price_from,
             start_date,
@@ -81,6 +119,11 @@ export async function updateTour(tourId: string, formData: FormData) {
 
     revalidatePath(`/admin/tours/${tourId}`);
     revalidatePath("/admin/tours");
+    revalidatePath("/");
+    revalidatePath(`/tours/${slug}`);
+    if (oldRow?.slug && oldRow.slug !== slug) {
+        revalidatePath(`/tours/${oldRow.slug}`);
+    }
     redirect(`/admin/tours/${tourId}`);
 }
 
@@ -99,6 +142,7 @@ export async function publishTour(tourId: string) {
 
     revalidatePath(`/admin/tours/${tourId}`);
     revalidatePath("/tours");
+    revalidatePath("/");
     redirect(`/admin/tours/${tourId}`);
 }
 
@@ -112,11 +156,22 @@ export async function publishTourWithSave(tourId: string, formData: FormData) {
     const start_date = startRaw;
     const end_date   = endRaw;
 
+    if (!title) throw new Error("Title is required");
+
     const sb = supabaseService();
+    const slug = await ensureUniqueSlug(sb, slugify(title), tourId);
+
+    const { data: oldRow } = await sb
+        .from("tours")
+        .select("slug")
+        .eq("id", tourId)
+        .maybeSingle();
+
     const { error } = await sb
         .from("tours")
         .update({
             title,
+            slug,
             summary,
             price_from,
             start_date,
@@ -134,6 +189,29 @@ export async function publishTourWithSave(tourId: string, formData: FormData) {
     revalidatePath(`/admin/tours/${tourId}`);
     revalidatePath("/admin/tours");
     revalidatePath("/tours");
+    revalidatePath("/");
+    revalidatePath(`/tours/${slug}`);
+    if (oldRow?.slug && oldRow.slug !== slug) {
+        revalidatePath(`/tours/${oldRow.slug}`);
+    }
+    redirect(`/admin/tours/${tourId}`);
+}
+
+export async function setFeaturedOnHome(tourId: string, featured: boolean) {
+    const sb = supabaseService();
+    const { error } = await sb
+        .from("tours")
+        .update({
+            featured_on_home: featured,
+            updated_at: new Date().toISOString(),
+        })
+        .eq("id", tourId);
+
+    if (error) throw new Error(error.message);
+
+    revalidatePath(`/admin/tours/${tourId}`);
+    revalidatePath("/admin/tours");
+    revalidatePath("/");
     redirect(`/admin/tours/${tourId}`);
 }
 
@@ -152,6 +230,7 @@ export async function unpublishTour(tourId: string) {
 
     revalidatePath(`/admin/tours/${tourId}`);
     revalidatePath("/tours");
+    revalidatePath("/");
     redirect(`/admin/tours/${tourId}`);
 }
 

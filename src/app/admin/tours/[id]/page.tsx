@@ -1,10 +1,16 @@
 import Link from "next/link";
 import { supabaseService } from "@/lib/supabase/server";
 import { todayISODateInTimeZone, TOUR_DATE_TZ } from "@/lib/tour-dates";
-import { publishTourWithSave, unpublishTour, updateTour } from "../actions";
+import {
+    publishTourWithSave,
+    unpublishTour,
+    updateTour,
+    setFeaturedOnHome,
+} from "../actions";
 import { AdminTourInfoForm } from "@/components/admin/admin-tour-info-form";
 import { CoverImageUploader } from "@/components/admin/cover-image-uploader";
 import { StopsEditor } from "@/components/admin/stops-editor";
+import { signOut } from "../../login/actions";
 import type { Category } from "@/components/admin/category-selector";
 
 export default async function AdminTourEditPage({
@@ -18,7 +24,7 @@ export default async function AdminTourEditPage({
     const [tourRes, categoriesRes, tourCatsRes, coverRes, stopsRes] = await Promise.all([
         sb
             .from("tours")
-            .select("id, title, summary, price_from, start_date, end_date, status, slug, updated_at")
+            .select("id, title, summary, price_from, start_date, end_date, status, slug, featured_on_home, updated_at")
             .eq("id", id)
             .single(),
         sb
@@ -73,7 +79,13 @@ export default async function AdminTourEditPage({
         await unpublishTour(id);
     }
 
-    const isPublished = tour.status === "published";
+    async function onToggleFeaturedOnHome() {
+        "use server";
+        await setFeaturedOnHome(id, !tour.featured_on_home);
+    }
+
+    const isPublished       = tour.status === "published";
+    const isFeaturedOnHome  = Boolean(tour.featured_on_home);
     const minDate = todayISODateInTimeZone(TOUR_DATE_TZ);
 
     return (
@@ -101,6 +113,14 @@ export default async function AdminTourEditPage({
                         {isPublished ? "已發佈" : "草稿"}
                     </span>
                     <span className="opacity-60">/tours/{tour.slug}</span>
+                    <form action={signOut}>
+                        <button
+                            type="submit"
+                            className="rounded-lg border border-[#e8c9a0] bg-white px-3 py-1.5 text-xs font-medium text-[#7a4020] transition-colors hover:bg-[#f5ca91]/30"
+                        >
+                            登出
+                        </button>
+                    </form>
                 </div>
             </div>
 
@@ -122,9 +142,11 @@ export default async function AdminTourEditPage({
                     savedParentId={savedParent?.id ?? ""}
                     savedChildId={savedChild?.id ?? ""}
                     isPublished={isPublished}
+                    isFeaturedOnHome={isFeaturedOnHome}
                     saveAction={onSave}
                     publishAction={onPublish}
                     unpublishAction={onUnpublish}
+                    toggleFeaturedOnHomeAction={onToggleFeaturedOnHome}
                 />
 
                 {/* ── Right: images ──────────────────────────────────── */}
