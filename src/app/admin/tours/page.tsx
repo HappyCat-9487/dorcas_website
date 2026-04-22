@@ -2,6 +2,7 @@ import Link from "next/link";
 import { supabaseService } from "@/lib/supabase/server";
 import { createTour } from "./actions";
 import { signOut } from "../login/actions";
+import { CreateTourForm } from "./create-tour-form";
 
 export default async function AdminToursPage() {
     const sb = supabaseService();
@@ -48,16 +49,7 @@ export default async function AdminToursPage() {
             {/* Create new tour */}
             <div className="rounded-xl border border-[#e8c9a0] bg-white p-5">
                 <h2 className="mb-3 text-sm font-semibold text-[#b83553]">新增行程</h2>
-                <form action={createTour} className="flex gap-2">
-                    <input
-                        name="title"
-                        placeholder="輸入行程名稱..."
-                        className="flex-1 rounded-lg border border-[#e8c9a0] bg-[#fdf7ee] px-3 py-2 text-sm focus:border-[#e8928a] focus:outline-none"
-                    />
-                    <button className="rounded-lg bg-[#e8928a] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90">
-                        建立草稿
-                    </button>
-                </form>
+                <CreateTourForm action={createTour} />
             </div>
 
             {/* Tour list */}
