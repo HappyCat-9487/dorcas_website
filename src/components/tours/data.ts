@@ -6,12 +6,14 @@ export type ItineraryStop = {
 };
 
 export type DepartureRow = {
-  date: string;
+  /** Formatted travel dates, e.g. "2026/5/17 – 2026/5/23" (or just start date). */
+  travelDate: string;
   tourName: string;
-  days: number;
-  airline: string;
-  visa: string;
-  pricePerPerson: string;
+  days: number | null;
+  airline: string | null;
+  visa: string | null;
+  pricePerPerson: string | null;
+  /** Defaults to "open". "full" support reserved for future capacity tracking. */
   status: "open" | "full";
 };
 
@@ -30,7 +32,7 @@ export const tourDetails: Record<string, TourDetail> = {
     heroImage: "/figures/NorwayAurora.jpg",
     departures: [
       {
-        date: "2026/5/17",
+        travelDate: "2026/5/17 – 2026/5/23",
         tourName: "挪威極光之七日遊",
         days: 7,
         airline: "長榮航空",
@@ -39,7 +41,7 @@ export const tourDetails: Record<string, TourDetail> = {
         status: "full",
       },
       {
-        date: "2026/8/14",
+        travelDate: "2026/8/14 – 2026/8/20",
         tourName: "挪威極光之七日遊",
         days: 7,
         airline: "長榮航空",
@@ -48,7 +50,7 @@ export const tourDetails: Record<string, TourDetail> = {
         status: "open",
       },
       {
-        date: "2026/9/28",
+        travelDate: "2026/9/28 – 2026/10/4",
         tourName: "挪威極光之七日遊",
         days: 7,
         airline: "中華航空",

@@ -1,7 +1,9 @@
 import { PageShell } from "@/components/nav/page-shell";
 import { TourDetailClient } from "@/components/tours/tour-detail-client";
+import type { DepartureRow } from "@/components/tours/data";
 import { supabaseAnon } from "@/lib/supabase/server";
 import { tourDetails } from "@/components/tours/data";
+import { computeTripDays } from "@/lib/tour-dates";
 
 // Always re-read from Supabase so cover images / stops edited in admin
 // show up immediately without waiting for a rebuild.
@@ -10,10 +12,32 @@ export const revalidate = 0;
 
 type Props = { params: Promise<{ slug: string }> };
 
+function formatPrice(raw: string | null): string | null {
+  if (!raw) return null;
+  const n = Number(raw);
+  if (isNaN(n)) return raw;
+  return "NT$ " + n.toLocaleString("zh-TW");
+}
+
+function formatDate(iso: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(iso + "T00:00:00Z");
+  if (isNaN(d.getTime())) return null;
+  return `${d.getUTCFullYear()}/${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
+}
+
+function formatTravelDate(
+  start: string | null,
+  end: string | null,
+): string {
+  const s = formatDate(start);
+  const e = formatDate(end);
+  if (s && e) return `${s} – ${e}`;
+  return s ?? e ?? "—";
+}
+
 export default async function TourDetailPage({ params }: Props) {
   const { slug: rawSlug } = await params;
-  // Next.js 15 already decodes the segment, but do one guarded decode in case
-  // a client sent a pre-encoded value manually.
   let slug = rawSlug;
   try {
     const decoded = decodeURIComponent(rawSlug);
@@ -26,7 +50,9 @@ export default async function TourDetailPage({ params }: Props) {
 
   const { data: tour, error: tourError } = await sb
     .from("tours")
-    .select("id, title, summary, price_from, start_date, end_date, slug")
+    .select(
+      "id, title, summary, price_from, airline, visa, start_date, end_date, slug",
+    )
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
@@ -40,9 +66,6 @@ export default async function TourDetailPage({ params }: Props) {
           <TourDetailClient
             title={staticTour.title}
             summary={null}
-            priceFrom={null}
-            startDate={null}
-            endDate={null}
             heroImage={staticTour.heroImage}
             stops={staticTour.stops.map((s, i) => ({
               subtheme: s.name,
@@ -57,8 +80,6 @@ export default async function TourDetailPage({ params }: Props) {
       );
     }
 
-    // Diagnostic page: makes the failure mode visible instead of silent 404,
-    // so admins can quickly spot slug/RLS/publish problems.
     return (
       <PageShell>
         <main className="mx-auto max-w-[900px] space-y-4 px-6 py-14 text-black">
@@ -94,20 +115,28 @@ export default async function TourDetailPage({ params }: Props) {
       .maybeSingle(),
   ]);
 
-  const staticFallback = tourDetails[slug];
-  const departures = staticFallback?.departures ?? [];
+  // Build the single departure row from this tour's own fields. (Capacity /
+  // "額滿" support is reserved for future capacity tracking.)
+  const row: DepartureRow = {
+    travelDate: formatTravelDate(tour.start_date ?? null, tour.end_date ?? null),
+    tourName: tour.title,
+    days: computeTripDays(tour.start_date, tour.end_date),
+    airline: tour.airline ?? null,
+    visa: tour.visa ?? null,
+    pricePerPerson: formatPrice(tour.price_from ?? null),
+    status: "open",
+  };
+  const hasAnyDepartureInfo =
+    tour.start_date || tour.end_date || tour.price_from || tour.airline || tour.visa;
 
   return (
     <PageShell>
       <TourDetailClient
         title={tour.title}
         summary={tour.summary ?? null}
-        priceFrom={tour.price_from ?? null}
-        startDate={tour.start_date ?? null}
-        endDate={tour.end_date ?? null}
         heroImage={coverImg?.path ?? null}
         stops={stops ?? []}
-        departures={departures}
+        departures={hasAnyDepartureInfo ? [row] : []}
       />
     </PageShell>
   );

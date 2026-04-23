@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { CategorySelector } from "@/components/admin/category-selector";
 import type { Category } from "@/components/admin/category-selector";
-import { tourDateRangeIssue } from "@/lib/tour-dates";
+import { computeTripDays, tourDateRangeIssue } from "@/lib/tour-dates";
 
 type TourRow = {
     title: string;
@@ -11,6 +11,8 @@ type TourRow = {
     price_from: string | null;
     start_date: string | null;
     end_date: string | null;
+    airline: string | null;
+    visa: string | null;
     updated_at: string;
 };
 
@@ -48,6 +50,9 @@ export function AdminTourInfoForm({
     toggleFeaturedOnHomeAction,
 }: Props) {
     const [dateError, setDateError] = useState<string | null>(null);
+    const [startDate, setStartDate] = useState<string>(tour.start_date ?? "");
+    const [endDate, setEndDate]     = useState<string>(tour.end_date ?? "");
+    const days = computeTripDays(startDate, endDate);
 
     const clearDateErrorIfFixed = useCallback((start: string, end: string) => {
         if (dateError && tourDateRangeIssue(start, end) === null) {
@@ -130,7 +135,7 @@ export function AdminTourInfoForm({
 
             <div className="space-y-1">
                 <label className="text-sm font-medium text-[#7a4020]">
-                    出發日期範圍
+                    旅行日期
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
@@ -141,14 +146,9 @@ export function AdminTourInfoForm({
                             min={minDate}
                             defaultValue={tour.start_date ?? ""}
                             onChange={(ev) => {
-                                const form = ev.currentTarget.form;
-                                const endEl = form?.elements.namedItem(
-                                    "end_date",
-                                ) as HTMLInputElement | null;
-                                clearDateErrorIfFixed(
-                                    ev.currentTarget.value,
-                                    endEl?.value ?? "",
-                                );
+                                const v = ev.currentTarget.value;
+                                setStartDate(v);
+                                clearDateErrorIfFixed(v, endDate);
                             }}
                             className={`${dateInputBase} ${dateError ? dateInputErr : dateInputOk}`}
                         />
@@ -161,19 +161,20 @@ export function AdminTourInfoForm({
                             min={minDate}
                             defaultValue={tour.end_date ?? ""}
                             onChange={(ev) => {
-                                const form = ev.currentTarget.form;
-                                const startEl = form?.elements.namedItem(
-                                    "start_date",
-                                ) as HTMLInputElement | null;
-                                clearDateErrorIfFixed(
-                                    startEl?.value ?? "",
-                                    ev.currentTarget.value,
-                                );
+                                const v = ev.currentTarget.value;
+                                setEndDate(v);
+                                clearDateErrorIfFixed(startDate, v);
                             }}
                             className={`${dateInputBase} ${dateError ? dateInputErr : dateInputOk}`}
                         />
                     </div>
                 </div>
+                <p className="text-xs text-[#7a4020]/50">
+                    天數（自動計算）：
+                    <span className="ml-1 font-semibold text-[#7a4020]">
+                        {days !== null ? `${days} 天` : "—"}
+                    </span>
+                </p>
                 {dateError ? (
                     <p
                         className="mt-1 border-l-4 border-red-600 pl-2 text-sm text-red-700"
@@ -182,6 +183,37 @@ export function AdminTourInfoForm({
                         {dateError}
                     </p>
                 ) : null}
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div className="space-y-1">
+                    <label className="text-sm font-medium text-[#7a4020]">
+                        航空公司
+                    </label>
+                    <input
+                        name="airline"
+                        defaultValue={tour.airline ?? ""}
+                        placeholder="例如：長榮航空 / 長榮・中華"
+                        className="w-full rounded-lg border border-[#e8c9a0] bg-[#fdf7ee] px-3 py-2 text-sm focus:border-[#e8928a] focus:outline-none"
+                    />
+                    <p className="text-xs text-[#7a4020]/40">
+                        常見寫法：長榮航空、中華航空、全日空、星宇航空、泰國航空（多家用「／」分隔）
+                    </p>
+                </div>
+                <div className="space-y-1">
+                    <label className="text-sm font-medium text-[#7a4020]">
+                        簽證
+                    </label>
+                    <input
+                        name="visa"
+                        defaultValue={tour.visa ?? ""}
+                        placeholder="例如：免簽 / 落地簽 / 需辦理簽證"
+                        className="w-full rounded-lg border border-[#e8c9a0] bg-[#fdf7ee] px-3 py-2 text-sm focus:border-[#e8928a] focus:outline-none"
+                    />
+                    <p className="text-xs text-[#7a4020]/40">
+                        常見寫法：免簽、落地簽、電子簽證、需辦理簽證（約 NT$ 1,800）
+                    </p>
+                </div>
             </div>
 
             <div className="space-y-1">

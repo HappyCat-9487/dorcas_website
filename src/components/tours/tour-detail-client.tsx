@@ -17,46 +17,18 @@ export type TourStop = {
 type Props = {
   title: string;
   summary: string | null;
-  /** Raw number string from DB, e.g. "179000" */
-  priceFrom: string | null;
-  /** ISO date string from DB, e.g. "2026-05-17" */
-  startDate: string | null;
-  endDate: string | null;
   heroImage: string | null;
   stops: TourStop[];
   departures: DepartureRow[];
 };
 
-function formatPrice(raw: string | null): string | null {
-  if (!raw) return null;
-  const n = Number(raw);
-  if (isNaN(n)) return raw; // legacy text fallback
-  return "NT$ " + n.toLocaleString("zh-TW");
-}
-
-function formatDate(iso: string | null): string | null {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return null;
-  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
-}
-
 export function TourDetailClient({
   title,
   summary,
-  priceFrom,
-  startDate,
-  endDate,
   heroImage,
   stops,
   departures,
 }: Props) {
-  const displayPrice = formatPrice(priceFrom);
-  const displayStart = formatDate(startDate);
-  const displayEnd   = formatDate(endDate);
-  const dateRange = displayStart && displayEnd
-    ? `${displayStart} – ${displayEnd}`
-    : displayStart ?? displayEnd ?? null;
   const [activeTab, setActiveTab] = useState<TourTab>("overview");
 
   return (
@@ -74,23 +46,12 @@ export function TourDetailClient({
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/50" />
 
-        {/* Title + meta overlay */}
+        {/* Title + summary overlay (price / travel dates now live in
+            the 出發日＆資訊 tab table below). */}
         <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 text-white">
           <h1 className="text-[22px] font-bold drop-shadow md:text-[32px]">{title}</h1>
-          {(dateRange || displayPrice) && (
-            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] md:text-[15px]">
-              {dateRange && (
-                <span className="opacity-90">📅 {dateRange}</span>
-              )}
-              {displayPrice && (
-                <span className="rounded bg-[#e8928a] px-2 py-0.5 font-semibold">
-                  {displayPrice} 起 / 人
-                </span>
-              )}
-            </div>
-          )}
           {summary && (
-            <p className="mt-1 max-w-xl text-[13px] opacity-80 md:text-[15px]">{summary}</p>
+            <p className="mt-2 max-w-xl text-[13px] opacity-85 md:text-[15px]">{summary}</p>
           )}
         </div>
       </div>

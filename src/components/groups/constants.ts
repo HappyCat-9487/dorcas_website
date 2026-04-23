@@ -1,41 +1,14 @@
 export type TourStatus = "額滿" | "報名";
 
 export type GroupTour = {
+  /** Formatted travel-date string, e.g. "2026/5/17 – 2026/5/23" */
   date: string;
   tripName: string;
-  days: number;
-  airline: string;
-  visa: string;
-  price: string;
+  days: number | null;
+  airline: string | null;
+  visa: string | null;
+  price: string | null;
   status: TourStatus;
+  /** Optional link to the tour detail page. */
+  href?: string;
 };
-
-export const groupTours: GroupTour[] = [
-  {
-    date: "2026/5/17",
-    tripName: "挪威極光之七日遊",
-    days: 7,
-    airline: "長榮航空",
-    visa: "免簽",
-    price: "NT$ 179,000",
-    status: "額滿",
-  },
-  {
-    date: "2026/8/14",
-    tripName: "挪威極光之七日遊",
-    days: 7,
-    airline: "長榮航空",
-    visa: "免簽",
-    price: "NT$ 179,000",
-    status: "報名",
-  },
-  {
-    date: "2026/9/28",
-    tripName: "挪威極光之七日遊",
-    days: 7,
-    airline: "中華航空",
-    visa: "免簽",
-    price: "NT$ 179,000",
-    status: "報名",
-  },
-];

@@ -83,6 +83,8 @@ export async function updateTour(tourId: string, formData: FormData) {
     const title      = String(formData.get("title")      || "").trim();
     const summary    = String(formData.get("summary")    || "");
     const price_from = String(formData.get("price_from") || "");
+    const airline    = String(formData.get("airline")    || "").trim();
+    const visa       = String(formData.get("visa")       || "").trim();
     const startRaw = String(formData.get("start_date") || "").trim();
     const endRaw   = String(formData.get("end_date")   || "").trim();
     assertValidTourDateRange(startRaw, endRaw);
@@ -94,12 +96,6 @@ export async function updateTour(tourId: string, formData: FormData) {
     const sb = supabaseService();
     const slug = await ensureUniqueSlug(sb, slugify(title), tourId);
 
-    const { data: oldRow } = await sb
-        .from("tours")
-        .select("slug")
-        .eq("id", tourId)
-        .maybeSingle();
-
     const { error } = await sb
         .from("tours")
         .update({
@@ -107,6 +103,8 @@ export async function updateTour(tourId: string, formData: FormData) {
             slug,
             summary,
             price_from,
+            airline: airline || null,
+            visa:    visa    || null,
             start_date,
             end_date,
             updated_at: new Date().toISOString(),
@@ -120,10 +118,10 @@ export async function updateTour(tourId: string, formData: FormData) {
     revalidatePath(`/admin/tours/${tourId}`);
     revalidatePath("/admin/tours");
     revalidatePath("/");
-    revalidatePath(`/tours/${slug}`);
-    if (oldRow?.slug && oldRow.slug !== slug) {
-        revalidatePath(`/tours/${oldRow.slug}`);
-    }
+    // NOTE: deliberately do NOT revalidatePath(`/tours/${slug}`) here — the slug
+    // may contain non-ASCII characters (e.g. Chinese), which Next.js cannot put
+    // into response headers (ByteString error). The public tour page is
+    // `force-dynamic` anyway, so skipping revalidation has no caching impact.
     redirect(`/admin/tours/${tourId}`);
 }
 
@@ -150,6 +148,8 @@ export async function publishTourWithSave(tourId: string, formData: FormData) {
     const title      = String(formData.get("title")      || "").trim();
     const summary    = String(formData.get("summary")    || "");
     const price_from = String(formData.get("price_from") || "");
+    const airline    = String(formData.get("airline")    || "").trim();
+    const visa       = String(formData.get("visa")       || "").trim();
     const startRaw = String(formData.get("start_date") || "").trim();
     const endRaw   = String(formData.get("end_date")   || "").trim();
     assertValidTourDateRange(startRaw, endRaw);
@@ -161,12 +161,6 @@ export async function publishTourWithSave(tourId: string, formData: FormData) {
     const sb = supabaseService();
     const slug = await ensureUniqueSlug(sb, slugify(title), tourId);
 
-    const { data: oldRow } = await sb
-        .from("tours")
-        .select("slug")
-        .eq("id", tourId)
-        .maybeSingle();
-
     const { error } = await sb
         .from("tours")
         .update({
@@ -174,6 +168,8 @@ export async function publishTourWithSave(tourId: string, formData: FormData) {
             slug,
             summary,
             price_from,
+            airline: airline || null,
+            visa:    visa    || null,
             start_date,
             end_date,
             status: "published",
@@ -190,10 +186,9 @@ export async function publishTourWithSave(tourId: string, formData: FormData) {
     revalidatePath("/admin/tours");
     revalidatePath("/tours");
     revalidatePath("/");
-    revalidatePath(`/tours/${slug}`);
-    if (oldRow?.slug && oldRow.slug !== slug) {
-        revalidatePath(`/tours/${oldRow.slug}`);
-    }
+    // See the note in updateTour(): skipping `/tours/{slug}` on purpose to
+    // avoid the Next.js ByteString error when slug is non-ASCII. The public
+    // page is `force-dynamic`, so no caching is affected.
     redirect(`/admin/tours/${tourId}`);
 }
 

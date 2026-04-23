@@ -76,16 +76,17 @@ export async function HomeHero() {
       </div>
 
       {/* ── Sandy zone below wave ──────────────────────────────────── */}
-      <div className="mx-auto max-w-[1440px] grid gap-6 px-5 pb-10 pt-6 md:grid-cols-[1fr_auto] md:gap-10 md:px-10 md:pb-14 md:pt-8 md:pr-28 xl:pr-12">
+      <div className="mx-auto max-w-[1440px] space-y-5 px-5 pb-16 pt-5 md:space-y-6 md:px-10 md:pb-20 md:pt-7 lg:pr-28">
         <p className="leading-tight">
-          <span className={`${italianno.className} text-[60px] md:text-[68px]`}>
+          <span className={`${italianno.className} text-[56px] md:text-[64px]`}>
             Che programmi?
           </span>{" "}
-          <span className="text-[34px] md:text-[50px]">新行程？</span>
+          <span className="text-[30px] md:text-[44px]">新行程？</span>
         </p>
-        <div className="md:justify-self-end">
-          <SearchPanel />
-        </div>
+
+        {/* Full-width horizontal search banner (used to be a boxed panel on
+            the right, which got visually blocked by the fixed SocialRail). */}
+        <SearchPanel />
       </div>
 
       <SocialRail />
