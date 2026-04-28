@@ -4,6 +4,7 @@ import { useState } from "react";
 import { TourTabBar, type TourTab } from "@/components/tours/tab-bar";
 import { ItineraryStopCard } from "@/components/tours/itinerary-stop";
 import { DepartureTable } from "@/components/tours/departure-table";
+import { InquiryForm } from "@/components/tours/inquiry-form";
 import type { DepartureRow } from "@/components/tours/data";
 
 export type TourStop = {
@@ -15,6 +16,7 @@ export type TourStop = {
 };
 
 type Props = {
+  tourId: string | null;
   title: string;
   summary: string | null;
   heroImage: string | null;
@@ -23,6 +25,7 @@ type Props = {
 };
 
 export function TourDetailClient({
+  tourId,
   title,
   summary,
   heroImage,
@@ -101,55 +104,7 @@ export function TourDetailClient({
             <h2 className="mb-8 text-[28px] font-bold text-[#e8928a] md:text-[36px]">
               行程諮詢
             </h2>
-            <form
-              className="mx-auto max-w-2xl space-y-5"
-              onSubmit={(e) => e.preventDefault()}
-            >
-              <div className="grid grid-cols-[110px_1fr] items-center gap-4">
-                <label className="text-right text-[15px] text-black/70">姓名:</label>
-                <input
-                  type="text"
-                  className="h-10 w-full rounded border border-black/10 bg-white/80 px-3 text-[15px] outline-none focus:border-[#e8928a]"
-                />
-              </div>
-              <div className="grid grid-cols-[110px_1fr] items-center gap-4">
-                <label className="text-right text-[15px] text-black/70">手機號碼:</label>
-                <input
-                  type="tel"
-                  className="h-10 w-full rounded border border-black/10 bg-white/80 px-3 text-[15px] outline-none focus:border-[#e8928a]"
-                />
-              </div>
-              <div className="grid grid-cols-[110px_1fr] items-center gap-4">
-                <label className="text-right text-[15px] text-black/70">Email:</label>
-                <input
-                  type="email"
-                  className="h-10 w-full rounded border border-black/10 bg-white/80 px-3 text-[15px] outline-none focus:border-[#e8928a]"
-                />
-              </div>
-              <div className="grid grid-cols-[110px_1fr] items-start gap-4">
-                <label className="pt-2 text-right text-[15px] text-black/70">需求說明:</label>
-                <textarea
-                  rows={6}
-                  className="w-full rounded border border-black/10 bg-white/80 p-3 text-[15px] outline-none focus:border-[#e8928a]"
-                />
-              </div>
-              <div className="flex items-center gap-2 pl-[126px]">
-                <input type="checkbox" id="privacy" className="accent-[#e8928a]" />
-                <label htmlFor="privacy" className="text-[13px] text-black/60">
-                  我已經閱讀
-                  <a href="#" className="underline hover:text-[#e8928a]">隱私權政策</a>
-                  並同意其內容
-                </label>
-              </div>
-              <div className="flex justify-end pt-2">
-                <button
-                  type="submit"
-                  className="rounded-lg bg-[#e8928a] px-12 py-3 text-[16px] font-semibold text-white transition-opacity hover:opacity-90"
-                >
-                  送出
-                </button>
-              </div>
-            </form>
+            <InquiryForm tourId={tourId} tourTitle={title} />
           </div>
         )}
       </div>

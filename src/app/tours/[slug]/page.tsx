@@ -64,6 +64,7 @@ export default async function TourDetailPage({ params }: Props) {
       return (
         <PageShell>
           <TourDetailClient
+            tourId={null}
             title={staticTour.title}
             summary={null}
             heroImage={staticTour.heroImage}
@@ -132,6 +133,7 @@ export default async function TourDetailPage({ params }: Props) {
   return (
     <PageShell>
       <TourDetailClient
+        tourId={tour.id}
         title={tour.title}
         summary={tour.summary ?? null}
         heroImage={coverImg?.path ?? null}
