@@ -9,6 +9,10 @@ import {
   todayISODateInTimeZone,
   TOUR_DATE_TZ,
 } from "@/lib/tour-dates";
+import {
+  computeRegistrationStatus,
+  getSignedUpCounts,
+} from "@/lib/registration-status";
 
 const italianno = Italianno({ subsets: ["latin"], weight: "400" });
 
@@ -54,7 +58,7 @@ async function loadGroupRows(): Promise<GroupTour[]> {
   const { data, error } = await sb
     .from("tours")
     .select(
-      "title, slug, price_from, airline, visa, start_date, end_date",
+      "id, title, slug, price_from, airline, visa, max_attendees, start_date, end_date",
     )
     .eq("status", "published")
     .not("start_date", "is", null)
@@ -63,16 +67,25 @@ async function loadGroupRows(): Promise<GroupTour[]> {
 
   if (error || !data) return [];
 
-  return data.map((t): GroupTour => ({
-    date: formatTravelDate(t.start_date ?? null, t.end_date ?? null),
-    tripName: t.title,
-    days: computeTripDays(t.start_date, t.end_date),
-    airline: t.airline ?? null,
-    visa: t.visa ?? null,
-    price: formatPrice(t.price_from ?? null),
-    status: "報名", // capacity / 額滿 tracking is a future feature
-    href: `/tours/${encodeURIComponent(t.slug)}`,
-  }));
+  // Single query for ALL signed-up counts so we don't N+1 on the table.
+  const counts = await getSignedUpCounts(data.map((t) => t.id));
+
+  return data.map((t): GroupTour => {
+    const reg = computeRegistrationStatus(t.max_attendees, counts[t.id] ?? 0);
+    const slugEnc = encodeURIComponent(t.slug);
+    return {
+      date: formatTravelDate(t.start_date ?? null, t.end_date ?? null),
+      tripName: t.title,
+      days: computeTripDays(t.start_date, t.end_date),
+      airline: t.airline ?? null,
+      visa: t.visa ?? null,
+      price: formatPrice(t.price_from ?? null),
+      status: reg === "full" ? "額滿" : "報名",
+      href: `/tours/${slugEnc}`,
+      registerHref:
+        reg === "open" ? `/tours/${slugEnc}/register` : undefined,
+    };
+  });
 }
 
 export default async function GroupsPage() {

@@ -13,8 +13,13 @@ export type DepartureRow = {
   airline: string | null;
   visa: string | null;
   pricePerPerson: string | null;
-  /** Defaults to "open". "full" support reserved for future capacity tracking. */
+  /**
+   * "open"  → green "報名" button linking to registerHref.
+   * "full"  → red disabled "額滿" pill (max_attendees reached).
+   */
   status: "open" | "full";
+  /** Where the 報名 button should link to. Required when status is "open". */
+  registerHref?: string;
 };
 
 export type TourDetail = {

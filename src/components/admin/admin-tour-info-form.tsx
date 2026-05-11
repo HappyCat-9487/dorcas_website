@@ -13,6 +13,7 @@ type TourRow = {
     end_date: string | null;
     airline: string | null;
     visa: string | null;
+    max_attendees: number | null;
     updated_at: string;
 };
 
@@ -214,6 +215,24 @@ export function AdminTourInfoForm({
                         常見寫法：免簽、落地簽、電子簽證、需辦理簽證（約 NT$ 1,800）
                     </p>
                 </div>
+            </div>
+
+            <div className="space-y-1">
+                <label className="text-sm font-medium text-[#7a4020]">
+                    最大報名人數（整團上限）
+                </label>
+                <input
+                    name="max_attendees"
+                    type="number"
+                    min={1}
+                    step={1}
+                    defaultValue={tour.max_attendees ?? ""}
+                    placeholder="例如 20（留空表示不限）"
+                    className="w-full rounded-lg border border-[#e8c9a0] bg-[#fdf7ee] px-3 py-2 text-sm focus:border-[#e8928a] focus:outline-none"
+                />
+                <p className="text-xs text-[#7a4020]/40">
+                    達到此人數後，前台「報名」按鈕會自動變成紅色「額滿」並停用。留空則不限制。
+                </p>
             </div>
 
             <div className="space-y-1">

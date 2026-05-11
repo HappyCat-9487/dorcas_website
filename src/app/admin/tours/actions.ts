@@ -79,12 +79,24 @@ async function syncCategories(
     if (error) throw new Error(error.message);
 }
 
+/** Parse the optional max_attendees integer field from FormData. */
+function parseMaxAttendees(formData: FormData): number | null {
+    const raw = String(formData.get("max_attendees") ?? "").trim();
+    if (!raw) return null;
+    const n = Number.parseInt(raw, 10);
+    if (!Number.isFinite(n) || n <= 0) {
+        throw new Error("最大報名人數必須是大於 0 的整數，或留空表示不限。");
+    }
+    return n;
+}
+
 export async function updateTour(tourId: string, formData: FormData) {
     const title      = String(formData.get("title")      || "").trim();
     const summary    = String(formData.get("summary")    || "");
     const price_from = String(formData.get("price_from") || "");
     const airline    = String(formData.get("airline")    || "").trim();
     const visa       = String(formData.get("visa")       || "").trim();
+    const max_attendees = parseMaxAttendees(formData);
     const startRaw = String(formData.get("start_date") || "").trim();
     const endRaw   = String(formData.get("end_date")   || "").trim();
     assertValidTourDateRange(startRaw, endRaw);
@@ -105,6 +117,7 @@ export async function updateTour(tourId: string, formData: FormData) {
             price_from,
             airline: airline || null,
             visa:    visa    || null,
+            max_attendees,
             start_date,
             end_date,
             updated_at: new Date().toISOString(),
@@ -150,6 +163,7 @@ export async function publishTourWithSave(tourId: string, formData: FormData) {
     const price_from = String(formData.get("price_from") || "");
     const airline    = String(formData.get("airline")    || "").trim();
     const visa       = String(formData.get("visa")       || "").trim();
+    const max_attendees = parseMaxAttendees(formData);
     const startRaw = String(formData.get("start_date") || "").trim();
     const endRaw   = String(formData.get("end_date")   || "").trim();
     assertValidTourDateRange(startRaw, endRaw);
@@ -170,6 +184,7 @@ export async function publishTourWithSave(tourId: string, formData: FormData) {
             price_from,
             airline: airline || null,
             visa:    visa    || null,
+            max_attendees,
             start_date,
             end_date,
             status: "published",

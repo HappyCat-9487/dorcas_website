@@ -25,6 +25,12 @@ export default async function AdminToursPage() {
                         🏞️ 地區頁面
                     </Link>
                     <Link
+                        href="/admin/registrations"
+                        className="rounded-lg border border-[#e8c9a0] bg-white px-3 py-1.5 text-xs font-medium text-[#7a4020] transition-colors hover:bg-[#f5ca91]/30"
+                    >
+                        📋 報名管理
+                    </Link>
+                    <Link
                         href="/admin/settings"
                         className="rounded-lg border border-[#e8c9a0] bg-white px-3 py-1.5 text-xs font-medium text-[#7a4020] transition-colors hover:bg-[#f5ca91]/30"
                     >

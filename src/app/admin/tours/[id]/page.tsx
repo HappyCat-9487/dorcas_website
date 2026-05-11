@@ -24,7 +24,7 @@ export default async function AdminTourEditPage({
     const [tourRes, categoriesRes, tourCatsRes, coverRes, stopsRes] = await Promise.all([
         sb
             .from("tours")
-            .select("id, title, summary, price_from, airline, visa, start_date, end_date, status, slug, featured_on_home, updated_at")
+            .select("id, title, summary, price_from, airline, visa, max_attendees, start_date, end_date, status, slug, featured_on_home, updated_at")
             .eq("id", id)
             .single(),
         sb
@@ -138,6 +138,7 @@ export default async function AdminTourEditPage({
                         end_date: tour.end_date,
                         airline: tour.airline ?? null,
                         visa: tour.visa ?? null,
+                        max_attendees: tour.max_attendees ?? null,
                         updated_at: tour.updated_at,
                     }}
                     categories={categories}

@@ -4,6 +4,10 @@ import type { DepartureRow } from "@/components/tours/data";
 import { supabaseAnon } from "@/lib/supabase/server";
 import { tourDetails } from "@/components/tours/data";
 import { computeTripDays } from "@/lib/tour-dates";
+import {
+  computeRegistrationStatus,
+  getSignedUpCount,
+} from "@/lib/registration-status";
 
 // Always re-read from Supabase so cover images / stops edited in admin
 // show up immediately without waiting for a rebuild.
@@ -51,7 +55,7 @@ export default async function TourDetailPage({ params }: Props) {
   const { data: tour, error: tourError } = await sb
     .from("tours")
     .select(
-      "id, title, summary, price_from, airline, visa, start_date, end_date, slug",
+      "id, title, summary, price_from, airline, visa, max_attendees, start_date, end_date, slug",
     )
     .eq("slug", slug)
     .eq("status", "published")
@@ -102,7 +106,7 @@ export default async function TourDetailPage({ params }: Props) {
     );
   }
 
-  const [{ data: stops }, { data: coverImg }] = await Promise.all([
+  const [{ data: stops }, { data: coverImg }, signedUp] = await Promise.all([
     sb
       .from("tour_stops")
       .select("subtheme, introduction, image_path, icon_path, sort_order")
@@ -114,10 +118,13 @@ export default async function TourDetailPage({ params }: Props) {
       .eq("tour_id", tour.id)
       .eq("is_cover", true)
       .maybeSingle(),
+    getSignedUpCount(tour.id),
   ]);
 
-  // Build the single departure row from this tour's own fields. (Capacity /
-  // "額滿" support is reserved for future capacity tracking.)
+  const status = computeRegistrationStatus(tour.max_attendees, signedUp);
+  const registerHref = `/tours/${encodeURIComponent(tour.slug)}/register`;
+
+  // Build the single departure row from this tour's own fields.
   const row: DepartureRow = {
     travelDate: formatTravelDate(tour.start_date ?? null, tour.end_date ?? null),
     tourName: tour.title,
@@ -125,7 +132,8 @@ export default async function TourDetailPage({ params }: Props) {
     airline: tour.airline ?? null,
     visa: tour.visa ?? null,
     pricePerPerson: formatPrice(tour.price_from ?? null),
-    status: "open",
+    status,
+    registerHref: status === "open" ? registerHref : undefined,
   };
   const hasAnyDepartureInfo =
     tour.start_date || tour.end_date || tour.price_from || tour.airline || tour.visa;

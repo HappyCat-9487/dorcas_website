@@ -3,15 +3,39 @@ import type { GroupTour } from "@/components/groups/constants";
 
 const columns = ["旅行日期", "行程名稱", "天數", "航空公司", "簽證", "價格/人", "報名狀態"];
 
-function StatusBadge({ status }: { status: GroupTour["status"] }) {
-  const isFull = status === "額滿";
+/**
+ * The 報名/額滿 cell. When status is "報名" we render a real <Link> button so it
+ * navigates straight to the registration page, swallowing the row-level <Link>
+ * click via stopPropagation so it doesn't double-navigate to the tour page.
+ */
+function StatusCell({ tour }: { tour: GroupTour }) {
+  const isFull = tour.status === "額滿";
+  if (isFull) {
+    return (
+      <span
+        aria-disabled="true"
+        className="inline-block min-w-[60px] cursor-not-allowed rounded-full bg-[#e07070] px-4 py-1.5 text-center text-[15px] font-semibold text-white"
+      >
+        額滿
+      </span>
+    );
+  }
+
+  if (tour.registerHref) {
+    return (
+      <Link
+        href={tour.registerHref}
+        onClick={(e) => e.stopPropagation()}
+        className="inline-block min-w-[60px] rounded-full bg-[#2dc8a8] px-4 py-1.5 text-center text-[15px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+      >
+        報名
+      </Link>
+    );
+  }
+
   return (
-    <span
-      className={`inline-block min-w-[60px] rounded-full px-4 py-1.5 text-center text-[15px] font-semibold text-white ${
-        isFull ? "bg-[#e07070]" : "bg-[#2dc8a8]"
-      }`}
-    >
-      {status}
+    <span className="inline-block min-w-[60px] rounded-full bg-[#2dc8a8]/70 px-4 py-1.5 text-center text-[15px] font-semibold text-white">
+      報名
     </span>
   );
 }
@@ -43,7 +67,7 @@ export function GroupTable({ rows }: { rows: GroupTour[] }) {
                 <span>{tour.visa ?? "—"}</span>
                 <span className="font-medium">{tour.price ?? "—"}</span>
                 <span className="flex justify-center">
-                  <StatusBadge status={tour.status} />
+                  <StatusCell tour={tour} />
                 </span>
               </>
             );

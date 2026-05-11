@@ -9,6 +9,8 @@ export type GroupTour = {
   visa: string | null;
   price: string | null;
   status: TourStatus;
-  /** Optional link to the tour detail page. */
+  /** Link to the tour detail page (the row itself). */
   href?: string;
+  /** Where clicking 報名 takes the user. Required when status is "報名". */
+  registerHref?: string;
 };

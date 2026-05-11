@@ -71,6 +71,28 @@ export default async function SearchPage({
   if (filterByCategoryId === null) {
     rows = [];
   } else {
+    // When keyword is present, also search tour_stops (景點名稱 + 簡介)
+    // and merge tour IDs from both sources so that e.g. searching "東京"
+    // finds tours whose *stops* mention 東京目黑川 even if the tour title
+    // or summary doesn't contain the word.
+    let stopTourIds: string[] | null = null;
+    const kw = params.q ? sanitizeKeyword(params.q) : "";
+
+    if (kw) {
+      const { data: stopHits } = await sb
+        .from("tour_stops")
+        .select("tour_id")
+        .or(`subtheme.ilike.%${kw}%,introduction.ilike.%${kw}%`);
+
+      if (stopHits && stopHits.length > 0) {
+        stopTourIds = [
+          ...new Set(
+            (stopHits as { tour_id: string }[]).map((r) => r.tour_id),
+          ),
+        ];
+      }
+    }
+
     let q = sb
       .from("tours")
       .select(
@@ -89,9 +111,15 @@ export default async function SearchPage({
     if (params.start) q = q.gte("start_date", params.start);
     if (params.end)   q = q.lte("end_date",   params.end);
 
-    if (params.q) {
-      const kw = sanitizeKeyword(params.q);
-      if (kw) q = q.or(`title.ilike.%${kw}%,summary.ilike.%${kw}%`);
+    if (kw) {
+      if (stopTourIds && stopTourIds.length > 0) {
+        // Match title OR summary OR any stop that contained the keyword.
+        q = q.or(
+          `title.ilike.%${kw}%,summary.ilike.%${kw}%,id.in.(${stopTourIds.join(",")})`,
+        );
+      } else {
+        q = q.or(`title.ilike.%${kw}%,summary.ilike.%${kw}%`);
+      }
     }
 
     const { data, error } = await q.order("start_date", { ascending: true });

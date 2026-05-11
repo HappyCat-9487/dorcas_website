@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { DepartureRow } from "@/components/tours/data";
 
 type Props = { rows: DepartureRow[] };
@@ -33,11 +34,21 @@ export function DepartureTable({ rows }: Props) {
               <span className="font-medium text-black/80">{row.pricePerPerson ?? "—"}</span>
               <span className="flex justify-center">
                 {row.status === "full" ? (
-                  <span className="rounded-full bg-[#e8928a] px-5 py-1.5 text-[14px] font-semibold text-white">
+                  <span
+                    aria-disabled="true"
+                    className="cursor-not-allowed rounded-full bg-[#e07070] px-5 py-1.5 text-[14px] font-semibold text-white opacity-90"
+                  >
                     額滿
                   </span>
+                ) : row.registerHref ? (
+                  <Link
+                    href={row.registerHref}
+                    className="rounded-full bg-[#5bbfa8] px-5 py-1.5 text-[14px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+                  >
+                    報名
+                  </Link>
                 ) : (
-                  <span className="rounded-full bg-[#5bbfa8] px-5 py-1.5 text-[14px] font-semibold text-white">
+                  <span className="rounded-full bg-[#5bbfa8]/70 px-5 py-1.5 text-[14px] font-semibold text-white">
                     報名
                   </span>
                 )}
