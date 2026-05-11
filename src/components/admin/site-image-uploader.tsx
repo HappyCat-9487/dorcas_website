@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { updateSiteImage } from "@/app/admin/settings/actions";
+import { ImageCropDialog } from "@/components/admin/image-crop-dialog";
 
 type Props = {
     /**
@@ -24,6 +25,7 @@ export function SiteImageUploader({ settingKey, label, hint, currentUrl }: Props
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [saved, setSaved] = useState(false);
+    const [pendingFile, setPendingFile] = useState<File | null>(null);
     const [, startTransition] = useTransition();
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -31,25 +33,28 @@ export function SiteImageUploader({ settingKey, label, hint, currentUrl }: Props
         setPreview(currentUrl ? withCacheBuster(currentUrl) : null);
     }, [currentUrl]);
 
-    async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
+        // Reset the input so picking the same file again still triggers onChange.
+        e.target.value = "";
         if (!file) return;
         if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
             setError("只接受 JPG、PNG 或 WEBP 格式。");
             return;
         }
-
         setError(null);
         setSaved(false);
-        setUploading(true);
+        setPendingFile(file);
+    }
 
-        const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-        const storagePath = `${settingKey}-${Date.now()}.${ext}`;
+    async function uploadCroppedFile(file: File) {
+        setUploading(true);
+        const storagePath = `${settingKey}-${Date.now()}.jpg`;
         const sb = supabaseBrowser();
 
         const { error: uploadErr } = await sb.storage
             .from("site-assets")
-            .upload(storagePath, file, { upsert: true });
+            .upload(storagePath, file, { upsert: true, contentType: "image/jpeg" });
 
         if (uploadErr) {
             setError(uploadErr.message);
@@ -120,6 +125,24 @@ export function SiteImageUploader({ settingKey, label, hint, currentUrl }: Props
             {uploading && <p className="text-xs text-[#e8928a]">⏳ 上傳中，請稍候…</p>}
             {saved && !uploading && <p className="text-xs text-green-600">✓ 已儲存，前台將立即更新。</p>}
             {error && <p className="text-xs text-red-500">⚠️ {error}</p>}
+
+            {pendingFile && (
+                <ImageCropDialog
+                    file={pendingFile}
+                    aspect={16 / 9}
+                    outputType="image/jpeg"
+                    title={`裁切 ${label}（16:9）`}
+                    // All hero banners on the public site have a wavy bottom
+                    // cutout (~22% of the hero height). Show this in the
+                    // cropper so admins know which area will be hidden.
+                    frontendMask={{ kind: "wave", heightPercent: 22 }}
+                    onCancel={() => setPendingFile(null)}
+                    onConfirm={async (cropped) => {
+                        setPendingFile(null);
+                        await uploadCroppedFile(cropped);
+                    }}
+                />
+            )}
         </div>
     );
 }

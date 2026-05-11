@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { upsertCoverImage } from "@/app/admin/tours/actions";
+import { ImageCropDialog } from "@/components/admin/image-crop-dialog";
 
 type Props = {
     tourId: string;
@@ -28,6 +29,7 @@ export function CoverImageUploader({ tourId, currentPath }: Props) {
     const [preview, setPreview] = useState<string | null>(currentPath ?? null);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [pendingFile, setPendingFile] = useState<File | null>(null);
     const [, startTransition] = useTransition();
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -39,8 +41,9 @@ export function CoverImageUploader({ tourId, currentPath }: Props) {
         setPreview(withCacheBuster(currentPath));
     }, [currentPath]);
 
-    async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
+        e.target.value = "";
         if (!file) return;
 
         const allowed = ["image/jpeg", "image/png", "image/jpg"];
@@ -48,17 +51,18 @@ export function CoverImageUploader({ tourId, currentPath }: Props) {
             setError("只接受 JPG / PNG 格式。");
             return;
         }
-
         setError(null);
-        setUploading(true);
+        setPendingFile(file);
+    }
 
-        const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-        const storagePath = `covers/${tourId}/cover-${Date.now()}.${ext}`;
+    async function uploadCroppedFile(file: File) {
+        setUploading(true);
+        const storagePath = `covers/${tourId}/cover-${Date.now()}.jpg`;
         const sb = supabaseBrowser();
 
         const { error: uploadError } = await sb.storage
             .from("tour-assets")
-            .upload(storagePath, file, { upsert: true });
+            .upload(storagePath, file, { upsert: true, contentType: "image/jpeg" });
 
         if (uploadError) {
             setError(uploadError.message);
@@ -158,6 +162,20 @@ export function CoverImageUploader({ tourId, currentPath }: Props) {
             )}
             {error && (
                 <p className="text-xs text-red-500">⚠️ {error}</p>
+            )}
+
+            {pendingFile && (
+                <ImageCropDialog
+                    file={pendingFile}
+                    aspect={16 / 9}
+                    outputType="image/jpeg"
+                    title="裁切封面圖（16:9）"
+                    onCancel={() => setPendingFile(null)}
+                    onConfirm={async (cropped) => {
+                        setPendingFile(null);
+                        await uploadCroppedFile(cropped);
+                    }}
+                />
             )}
         </div>
     );

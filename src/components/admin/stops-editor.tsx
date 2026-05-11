@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { upsertTourStop, deleteTourStop, type TourStopData } from "@/app/admin/tours/actions";
+import { ImageCropDialog } from "@/components/admin/image-crop-dialog";
 
 const MAX_STOPS = 6;
 
@@ -78,6 +79,13 @@ export function StopsEditor({ tourId, initialStops }: Props) {
     const imageInputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const iconInputRefs  = useRef<(HTMLInputElement | null)[]>([]);
 
+    // When user picks a file, we stash it here and open the crop dialog first.
+    const [pendingCrop, setPendingCrop] = useState<{
+        idx: number;
+        kind: "image" | "icon";
+        file: File;
+    } | null>(null);
+
     function updateStop(idx: number, patch: Partial<StopRow>) {
         setStops((prev) => prev.map((s, i) => (i === idx ? { ...s, ...patch } : s)));
     }
@@ -99,7 +107,8 @@ export function StopsEditor({ tourId, initialStops }: Props) {
         // deleteTourStop 成功後會 redirect 回本頁，列表會與資料庫同步
     }
 
-    async function uploadFile(idx: number, file: File, kind: "image" | "icon") {
+    /** Triggered when the user picks a file – validate and open the cropper. */
+    function onFilePicked(idx: number, file: File, kind: "image" | "icon") {
         const allowed = kind === "image"
             ? ["image/jpeg", "image/png", "image/jpg"]
             : ["image/png"];
@@ -111,15 +120,24 @@ export function StopsEditor({ tourId, initialStops }: Props) {
             return;
         }
 
+        updateStop(idx, { error: null });
+        setPendingCrop({ idx, kind, file });
+    }
+
+    /** Actually upload the (cropped) file to Supabase storage. */
+    async function uploadFile(idx: number, file: File, kind: "image" | "icon") {
         updateStop(idx, { error: null, saving: true });
 
-        const ext = file.name.split(".").pop();
-        const storagePath = `stops/${tourId}/${idx}-${kind}.${ext}`;
+        // Use stable extensions matching the cropper output: jpg for images,
+        // png for icons (transparency preserved).
+        const ext = kind === "icon" ? "png" : "jpg";
+        const contentType = kind === "icon" ? "image/png" : "image/jpeg";
+        const storagePath = `stops/${tourId}/${idx}-${kind}-${Date.now()}.${ext}`;
         const sb = supabaseBrowser();
 
         const { error: uploadError } = await sb.storage
             .from("tour-assets")
-            .upload(storagePath, file, { upsert: true });
+            .upload(storagePath, file, { upsert: true, contentType });
 
         if (uploadError) {
             updateStop(idx, { error: uploadError.message, saving: false });
@@ -283,7 +301,8 @@ export function StopsEditor({ tourId, initialStops }: Props) {
                                 className="hidden"
                                 onChange={(e) => {
                                     const file = e.target.files?.[0];
-                                    if (file) uploadFile(idx, file, "image");
+                                    e.target.value = "";
+                                    if (file) onFilePicked(idx, file, "image");
                                 }}
                             />
                         </div>
@@ -338,7 +357,8 @@ export function StopsEditor({ tourId, initialStops }: Props) {
                                 className="hidden"
                                 onChange={(e) => {
                                     const file = e.target.files?.[0];
-                                    if (file) uploadFile(idx, file, "icon");
+                                    e.target.value = "";
+                                    if (file) onFilePicked(idx, file, "icon");
                                 }}
                             />
                         </div>
@@ -359,6 +379,26 @@ export function StopsEditor({ tourId, initialStops }: Props) {
                     </button>
                 </div>
             ))}
+
+            {pendingCrop && (
+                <ImageCropDialog
+                    file={pendingCrop.file}
+                    aspect={pendingCrop.kind === "icon" ? 1 : 4 / 3}
+                    outputType={pendingCrop.kind === "icon" ? "image/png" : "image/jpeg"}
+                    maxOutputPx={pendingCrop.kind === "icon" ? 512 : 2000}
+                    title={
+                        pendingCrop.kind === "icon"
+                            ? "裁切小圖示 Icon（1:1）"
+                            : "裁切景點圖片（4:3）"
+                    }
+                    onCancel={() => setPendingCrop(null)}
+                    onConfirm={async (cropped) => {
+                        const { idx, kind } = pendingCrop;
+                        setPendingCrop(null);
+                        await uploadFile(idx, cropped, kind);
+                    }}
+                />
+            )}
         </div>
     );
 }
