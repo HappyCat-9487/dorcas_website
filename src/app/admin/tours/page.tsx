@@ -31,6 +31,12 @@ export default async function AdminToursPage() {
                         📋 報名管理
                     </Link>
                     <Link
+                        href="/admin/ai-faq"
+                        className="rounded-lg border border-[#e8c9a0] bg-white px-3 py-1.5 text-xs font-medium text-[#7a4020] transition-colors hover:bg-[#f5ca91]/30"
+                    >
+                        🤖 AI 知識庫
+                    </Link>
+                    <Link
                         href="/admin/settings"
                         className="rounded-lg border border-[#e8c9a0] bg-white px-3 py-1.5 text-xs font-medium text-[#7a4020] transition-colors hover:bg-[#f5ca91]/30"
                     >

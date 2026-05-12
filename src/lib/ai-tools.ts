@@ -218,7 +218,10 @@ async function searchTours(args: SearchToursArgs) {
                 airline: r.airline,
                 visa: r.visa,
                 price_from: r.price_from,
-                url: `/tours/${encodeURIComponent(r.slug as string)}`,
+                // Leave the slug un-encoded so the AI prints clean Chinese
+                // links like /tours/北義大利之旅. The browser & Next.js
+                // <Link> handle URL-encoding automatically when navigating.
+                url: `/tours/${r.slug}`,
             };
         })
         .filter((r) => {
@@ -282,7 +285,7 @@ async function getTourDetail({ slug }: { slug: string }) {
         airline: tour.airline,
         visa: tour.visa,
         price_from: tour.price_from,
-        url: `/tours/${encodeURIComponent(tour.slug as string)}`,
+        url: `/tours/${tour.slug}`,
         stops:
             stops?.map((s) => ({
                 order: s.sort_order,
