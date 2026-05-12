@@ -2,6 +2,7 @@ import { tripFeatures, type TripFeature } from "@/components/home/constants";
 import { HomeHero } from "@/components/home/home-hero";
 import { TripFeatureRow } from "@/components/home/trip-feature-row";
 import { supabaseAnon } from "@/lib/supabase/server";
+import { todayISODateInTimeZone, TOUR_DATE_TZ } from "@/lib/tour-dates";
 
 const HOME_FEATURE_COUNT = 3;
 
@@ -15,6 +16,11 @@ type HomeTourRow = {
   featured_on_home: boolean;
   tour_images: { path: string; is_cover: boolean }[] | null;
 };
+
+/** A tour is "expired" once its start_date has passed (Taiwan timezone). */
+function isExpired(row: HomeTourRow, today: string): boolean {
+  return !!row.start_date && row.start_date < today;
+}
 
 /** Sort: soonest upcoming start_date first, NULL start_date last, tie-break by updated_at desc. */
 function byUpcomingStart(a: HomeTourRow, b: HomeTourRow): number {
@@ -42,11 +48,16 @@ async function loadHomeFeatures(): Promise<TripFeature[]> {
   const rows = (data ?? []) as HomeTourRow[];
   if (rows.length === 0) return [];
 
-  const featured = rows
+  // Hide tours whose start date has already passed — they shouldn't be
+  // promoted on the home page even if the admin still has them "featured".
+  const today = todayISODateInTimeZone(TOUR_DATE_TZ);
+  const upcoming = rows.filter((r) => !isExpired(r, today));
+
+  const featured = upcoming
     .filter((r) => r.featured_on_home)
     .sort(byUpcomingStart);
 
-  const rest = rows
+  const rest = upcoming
     .filter((r) => !r.featured_on_home)
     .sort(byUpcomingStart);
 

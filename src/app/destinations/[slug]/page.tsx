@@ -10,6 +10,7 @@ import {
 } from "@/components/destinations/constants";
 import { supabaseAnon } from "@/lib/supabase/server";
 import { getSettingValue } from "@/lib/site-settings";
+import { todayISODateInTimeZone, TOUR_DATE_TZ } from "@/lib/tour-dates";
 
 const italianno = Italianno({ subsets: ["latin"], weight: "400" });
 
@@ -76,6 +77,9 @@ export default async function DestinationPage({ params }: Props) {
         tour_images: { path: string; is_cover: boolean }[];
       };
 
+      // Hide tours whose start date has already passed (Taiwan timezone).
+      const today = todayISODateInTimeZone(TOUR_DATE_TZ);
+
       tours = rows
         .flatMap((row, i) => {
           const raw = row.tours as unknown;
@@ -84,6 +88,8 @@ export default async function DestinationPage({ params }: Props) {
             : (raw as TourRow | null);
 
           if (!t || t.status !== "published") return [];
+          // Skip expired tours.
+          if (t.start_date && t.start_date < today) return [];
 
           const cover = (t.tour_images ?? []).find((img) => img.is_cover);
 

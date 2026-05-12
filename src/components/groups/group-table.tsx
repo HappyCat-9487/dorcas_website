@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { GroupTour } from "@/components/groups/constants";
 
 const columns = ["旅行日期", "行程名稱", "天數", "航空公司", "簽證", "價格/人", "報名狀態"];
@@ -43,6 +44,8 @@ function StatusCell({ tour }: { tour: GroupTour }) {
 }
 
 export function GroupTable({ rows }: { rows: GroupTour[] }) {
+  const router = useRouter();
+
   return (
     <div className="mx-auto max-w-[1320px] px-5 pb-14 pt-0 md:px-10">
       {/* Header row */}
@@ -77,14 +80,24 @@ export function GroupTable({ rows }: { rows: GroupTour[] }) {
             const rowCls =
               "grid grid-cols-[1.4fr_2fr_0.7fr_1.2fr_0.7fr_1.3fr_1fr] items-center px-6 py-5 text-center text-[15px] md:text-[17px]";
 
+            // Use a clickable <div> instead of <Link> to avoid nested <a> tags
+            // (the StatusCell already contains a <Link> for the registration button).
             return tour.href ? (
-              <Link
+              <div
                 key={i}
-                href={tour.href}
-                className={`${rowCls} transition-colors hover:bg-[#f5ca91]/40`}
+                role="link"
+                tabIndex={0}
+                onClick={() => router.push(tour.href!)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    router.push(tour.href!);
+                  }
+                }}
+                className={`${rowCls} cursor-pointer transition-colors hover:bg-[#f5ca91]/40`}
               >
                 {inner}
-              </Link>
+              </div>
             ) : (
               <div key={i} className={rowCls}>
                 {inner}

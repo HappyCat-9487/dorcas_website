@@ -244,6 +244,34 @@ export async function unpublishTour(tourId: string) {
     redirect(`/admin/tours/${tourId}`);
 }
 
+/**
+ * Permanently delete a tour and everything linked to it.
+ * - tour_stops, tour_categories, tour_images, registrations, inquiries all
+ *   reference this tour. Most of them are `on delete cascade` / `set null` per
+ *   our migrations, but we explicitly delete tour-owned rows first to avoid
+ *   leaving orphan storage objects or surprises.
+ *
+ * NOTE: this is irreversible. The admin UI confirms before calling.
+ */
+export async function deleteTour(tourId: string) {
+    if (!tourId) throw new Error("Missing tour id.");
+
+    const sb = supabaseService();
+
+    // Best-effort: drop child rows first. If FK cascades are present this is
+    // a no-op; if not, we still get a clean delete.
+    await sb.from("tour_stops").delete().eq("tour_id", tourId);
+    await sb.from("tour_categories").delete().eq("tour_id", tourId);
+    await sb.from("tour_images").delete().eq("tour_id", tourId);
+
+    const { error } = await sb.from("tours").delete().eq("id", tourId);
+    if (error) throw new Error(error.message);
+
+    revalidatePath("/admin/tours");
+    revalidatePath("/groups");
+    revalidatePath("/");
+}
+
 // ── Cover image ───────────────────────────────────────────────────────────────
 
 export async function upsertCoverImage(tourId: string, path: string, alt: string) {
