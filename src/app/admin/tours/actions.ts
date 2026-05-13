@@ -60,21 +60,59 @@ export async function createTour(formData: FormData) {
     redirect(`/admin/tours/${data.id}`);
 }
 
+/**
+ * Persist a tour's categories.
+ *
+ * The form sends `category_ids` as a comma-separated list of **child** (sub-
+ * region) category IDs. For each one we look up the parent and store BOTH
+ * rows in `tour_categories`, so destination listings (which filter by parent
+ * OR child) keep working.
+ *
+ * Validation: at least one child must be picked, otherwise the tour would be
+ * orphaned from every category page.
+ */
 async function syncCategories(
     sb: ReturnType<typeof supabaseService>,
     tourId: string,
     formData: FormData,
 ) {
-    const parentId = String(formData.get("parent_category_id") || "");
-    const childId  = String(formData.get("child_category_id")  || "");
+    const raw = String(formData.get("category_ids") || "").trim();
+    const childIds = raw
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
 
+    if (childIds.length === 0) {
+        throw new Error("請至少加入一個分類（Region › Sub-region）。");
+    }
+
+    // Look up parent IDs for each chosen child. We only insert child rows
+    // that resolve to a real category whose parent_id is set.
+    const { data: childRows, error: lookupErr } = await sb
+        .from("categories")
+        .select("id, parent_id")
+        .in("id", childIds);
+
+    if (lookupErr) throw new Error(lookupErr.message);
+
+    const idSet = new Set<string>();
+    for (const row of childRows ?? []) {
+        idSet.add(row.id as string);
+        if (row.parent_id) idSet.add(row.parent_id as string);
+    }
+
+    if (idSet.size === 0) {
+        throw new Error("選擇的分類無效，請重新挑選。");
+    }
+
+    // Replace existing rows atomically: delete then insert.
     await sb.from("tour_categories").delete().eq("tour_id", tourId);
 
-    const ids = [parentId, childId].filter(Boolean);
-    if (ids.length === 0) return;
-
     const { error } = await sb.from("tour_categories").insert(
-        ids.map((category_id) => ({ tour_id: tourId, category_id })),
+        Array.from(idSet).map((category_id) => ({
+            tour_id: tourId,
+            category_id,
+        })),
     );
     if (error) throw new Error(error.message);
 }

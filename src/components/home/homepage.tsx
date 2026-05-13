@@ -1,6 +1,8 @@
 import { tripFeatures, type TripFeature } from "@/components/home/constants";
 import { HomeHero } from "@/components/home/home-hero";
+import { NewsSection } from "@/components/home/news-section";
 import { TripFeatureRow } from "@/components/home/trip-feature-row";
+import { getHomepageNews } from "@/lib/news";
 import { supabaseAnon } from "@/lib/supabase/server";
 import { todayISODateInTimeZone, TOUR_DATE_TZ } from "@/lib/tour-dates";
 
@@ -76,7 +78,12 @@ async function loadHomeFeatures(): Promise<TripFeature[]> {
 }
 
 export async function Homepage() {
-  const dbFeatures = await loadHomeFeatures();
+  // Fetch both concurrently — the news section query is small and indexed,
+  // so the homepage's TTFB stays the same.
+  const [dbFeatures, news] = await Promise.all([
+    loadHomeFeatures(),
+    getHomepageNews(),
+  ]);
 
   // When the admin hasn't published anything yet, keep the old placeholder look
   // so the homepage doesn't render empty.
@@ -86,7 +93,9 @@ export async function Homepage() {
     <main className="bg-[#f5ca91] text-black">
       <HomeHero />
 
-      <section className="mx-auto max-w-[1440px] space-y-10 px-4 pb-14 md:space-y-14 md:px-10 md:pb-20">
+      <NewsSection items={news} />
+
+      <section className="mx-auto max-w-[1440px] space-y-10 px-4 pb-14 md:space-y-14 md:px-10 md:pb-20 pt-10 md:pt-14">
         {features.map((feature, i) => (
           <TripFeatureRow key={`${feature.title}-${i}`} {...feature} />
         ))}

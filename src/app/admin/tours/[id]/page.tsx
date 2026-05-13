@@ -58,11 +58,12 @@ export default async function AdminTourEditPage({
     const coverPath  = coverRes.data?.path ?? null;
     const stops      = stopsRes.data ?? [];
 
-    const parents     = categories.filter((c) => c.parent_id === null);
-    const savedParent = parents.find((p) => savedIds.has(p.id));
-    const savedChild  = categories.find(
-        (c) => c.parent_id !== null && savedIds.has(c.id),
-    );
+    // A tag = a sub-region (child). We display those as pills; the parent is
+    // inferred when re-saving. Order them by their position in `categories`
+    // (which is sorted by name) so the pill list is deterministic.
+    const savedChildIds = categories
+        .filter((c) => c.parent_id !== null && savedIds.has(c.id))
+        .map((c) => c.id);
 
     async function onSave(formData: FormData) {
         "use server";
@@ -142,8 +143,7 @@ export default async function AdminTourEditPage({
                         updated_at: tour.updated_at,
                     }}
                     categories={categories}
-                    savedParentId={savedParent?.id ?? ""}
-                    savedChildId={savedChild?.id ?? ""}
+                    savedChildIds={savedChildIds}
                     isPublished={isPublished}
                     isFeaturedOnHome={isFeaturedOnHome}
                     saveAction={onSave}

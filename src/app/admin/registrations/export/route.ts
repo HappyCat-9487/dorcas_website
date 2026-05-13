@@ -2,6 +2,24 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { supabaseService } from "@/lib/supabase/server";
 
+/**
+ * Helper: keep leading zeros / alphanumeric-ish IDs safe when Excel opens the
+ * CSV. Excel auto-coerces "0998..." → 998... (number). The `="..."` syntax is
+ * an Excel-specific formula that forces the cell to be treated as text. Side
+ * effect: in plain-text viewers you'll see the literal `="..."`, but Excel /
+ * Google Sheets / Numbers render it as just the value.
+ *
+ * Apply to: phone, national_id, passport_no — any field that looks numeric
+ * but must preserve its exact string form.
+ */
+function asText(v: string | null | undefined): string {
+    if (!v) return "";
+    // Replace any existing double-quote in the value (rare for phones, but
+    // defensive). Escaped within the Excel formula by doubling.
+    const escaped = v.replace(/"/g, '""');
+    return `="${escaped}"`;
+}
+
 // CSV columns shown to admin / forwarded to airline / hotel.
 // Add or remove rows here to change the export.
 const COLUMNS: { key: string; header: string; map: (r: Reg) => string }[] = [
@@ -14,10 +32,10 @@ const COLUMNS: { key: string; header: string; map: (r: Reg) => string }[] = [
     { key: "first_name_en",    header: "英文名",       map: (r) => r.first_name_en },
     { key: "gender",           header: "性別",         map: (r) => genderLabel(r.gender) },
     { key: "birthday",         header: "生日",         map: (r) => r.birthday ?? "" },
-    { key: "national_id",      header: "身分證字號",   map: (r) => r.national_id ?? "" },
-    { key: "passport_no",      header: "護照號碼",     map: (r) => r.passport_no },
+    { key: "national_id",      header: "身分證字號",   map: (r) => asText(r.national_id) },
+    { key: "passport_no",      header: "護照號碼",     map: (r) => asText(r.passport_no) },
     { key: "passport_expiry",  header: "護照效期",     map: (r) => r.passport_expiry ?? "" },
-    { key: "phone",            header: "手機",         map: (r) => r.phone },
+    { key: "phone",            header: "手機",         map: (r) => asText(r.phone) },
     { key: "email",            header: "Email",       map: (r) => r.email },
     { key: "address",          header: "地址",         map: (r) => r.address ?? "" },
     { key: "party_size",       header: "報名人數",     map: (r) => String(r.party_size) },
@@ -26,7 +44,7 @@ const COLUMNS: { key: string; header: string; map: (r: Reg) => string }[] = [
     { key: "special_requests", header: "特殊需求",     map: (r) => r.special_requests ?? "" },
     { key: "emergency_name",   header: "緊急聯絡人",   map: (r) => r.emergency_name ?? "" },
     { key: "emergency_relation", header: "關係",       map: (r) => r.emergency_relation ?? "" },
-    { key: "emergency_phone",  header: "緊急聯絡電話", map: (r) => r.emergency_phone ?? "" },
+    { key: "emergency_phone",  header: "緊急聯絡電話", map: (r) => asText(r.emergency_phone) },
     { key: "agreed_marketing", header: "同意行銷",     map: (r) => (r.agreed_marketing ? "Y" : "N") },
 ];
 

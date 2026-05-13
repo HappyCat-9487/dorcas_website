@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -93,6 +94,19 @@ export function AiChatClient() {
   const [composing, setComposing] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const searchParams = useSearchParams();
+
+  // When someone clicks "深入了解" from a homepage news card we land here with
+  // `?q=<title>`. Pre-fill the input so the user can hit "送出" without retyping.
+  // Run once on mount only — we don't want to clobber the textarea later.
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q) {
+      setInput(q);
+      textareaRef.current?.focus();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

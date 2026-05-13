@@ -21,8 +21,8 @@ type Props = {
     minDate: string;
     tour: TourRow;
     categories: Category[];
-    savedParentId: string;
-    savedChildId: string;
+    /** Child category IDs currently saved on this tour. */
+    savedChildIds: string[];
     isPublished: boolean;
     isFeaturedOnHome: boolean;
     saveAction: (formData: FormData) => Promise<void>;
@@ -41,8 +41,7 @@ export function AdminTourInfoForm({
     minDate,
     tour,
     categories,
-    savedParentId,
-    savedChildId,
+    savedChildIds,
     isPublished,
     isFeaturedOnHome,
     saveAction,
@@ -237,13 +236,16 @@ export function AdminTourInfoForm({
 
             <div className="space-y-1">
                 <label className="text-sm font-medium text-[#7a4020]">
-                    Category（地區分類）
+                    Category（分類，可多選）
                 </label>
+                <p className="text-xs text-[#7a4020]/50">
+                    一個行程可以同時屬於多個分類。例：日本賞櫻團可同時加入「亞洲 › 日本」和「主題式 › 櫻花季」。
+                </p>
                 <CategorySelector
-                    key={`${savedParentId || "none"}-${savedChildId || "none"}-${tour.updated_at}`}
+                    /* Reset internal state when the saved tags change (e.g. after save). */
+                    key={`${savedChildIds.join("|") || "none"}-${tour.updated_at}`}
                     categories={categories}
-                    initialParentId={savedParentId}
-                    initialChildId={savedChildId}
+                    initialChildIds={savedChildIds}
                 />
             </div>
 

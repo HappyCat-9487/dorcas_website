@@ -5,6 +5,7 @@ import {
     createFaq,
     updateFaq,
     toggleFaqEnabled,
+    unpublishNews,
 } from "./actions";
 import { DeleteFaqButton } from "./delete-faq-button";
 
@@ -22,7 +23,30 @@ type FaqRow = {
     enabled: boolean;
     notes: string | null;
     updated_at: string;
+    news_title: string | null;
+    news_published_at: string | null;
+    news_expires_at: string | null;
 };
+
+/** Default expiry — 4 weeks from now, formatted "YYYY-MM-DD" for <input type=date>. */
+function defaultExpiryDate(): string {
+    const d = new Date(Date.now() + 4 * 7 * 24 * 60 * 60 * 1000);
+    return d.toISOString().slice(0, 10);
+}
+
+function toDateInputValue(iso: string | null): string {
+    if (!iso) return defaultExpiryDate();
+    return iso.slice(0, 10);
+}
+
+/** "已上架 / 已過期 / 未發佈" status for one FAQ row. */
+function newsStatus(row: FaqRow): "active" | "expired" | "none" {
+    if (!row.news_published_at) return "none";
+    if (row.news_expires_at && new Date(row.news_expires_at) <= new Date()) {
+        return "expired";
+    }
+    return "active";
+}
 
 export default async function AdminAiFaqPage({
     searchParams,
@@ -35,7 +59,7 @@ export default async function AdminAiFaqPage({
     const { data: rowsRaw } = await sb
         .from("ai_faq")
         .select(
-            "id, category, question, answer, sort_order, enabled, notes, updated_at",
+            "id, category, question, answer, sort_order, enabled, notes, updated_at, news_title, news_published_at, news_expires_at",
         )
         .order("category", { ascending: true })
         .order("sort_order", { ascending: true })
@@ -165,6 +189,46 @@ export default async function AdminAiFaqPage({
                         </label>
                     )}
 
+                    {/* ------------------------------------------------------------
+                     * 「最新消息」發佈區塊
+                     *
+                     * 勾選後此 FAQ 也會出現在首頁「最新消息」卡片。
+                     * 預設 4 週後自動下架；admin 可在 news_expires_at 自訂日期。
+                     * ----------------------------------------------------------- */}
+                    <div className="rounded-lg border border-dashed border-[#e8c9a0] bg-[#fdf7ee]/60 p-3 space-y-2">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-[#b83553]">
+                            <input
+                                type="checkbox"
+                                name="post_news"
+                                defaultChecked={!!editing?.news_published_at}
+                            />
+                            📣 也發佈到首頁「最新消息」
+                        </label>
+                        <p className="text-[11px] text-[#7a4020]/60">
+                            勾選後會以卡片形式出現在首頁。若沒指定下架日期，預設 4 週後自動消失。
+                        </p>
+                        <div className="grid grid-cols-1 gap-2 md:grid-cols-[2fr_1fr]">
+                            <Field label="新聞標題（選填，留空用上方「問題」）">
+                                <input
+                                    name="news_title"
+                                    defaultValue={editing?.news_title ?? ""}
+                                    placeholder="美國 ESTA 即將漲價，2026/2/1 起生效"
+                                    className={INPUT_CLS}
+                                />
+                            </Field>
+                            <Field label="下架日期（預設 4 週後）">
+                                <input
+                                    name="news_expires_at"
+                                    type="date"
+                                    defaultValue={toDateInputValue(
+                                        editing?.news_expires_at ?? null,
+                                    )}
+                                    className={INPUT_CLS}
+                                />
+                            </Field>
+                        </div>
+                    </div>
+
                     <div className="flex items-center justify-end gap-2 pt-1">
                         {editing && (
                             <Link
@@ -234,17 +298,35 @@ function Field({
 }
 
 function FaqRowItem({ row }: { row: FaqRow }) {
+    const news = newsStatus(row);
     return (
         <li className={`px-5 py-4 ${row.enabled ? "" : "opacity-50"}`}>
             <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-medium text-[#7a4020]">
                             {row.question}
                         </span>
                         {!row.enabled && (
                             <span className="rounded-full bg-[#7a4020]/15 px-2 py-0.5 text-[10px] text-[#7a4020]/60">
                                 已停用
+                            </span>
+                        )}
+                        {news === "active" && (
+                            <span
+                                className="rounded-full bg-[#b83553] px-2 py-0.5 text-[10px] font-medium text-white"
+                                title={
+                                    row.news_expires_at
+                                        ? `將於 ${row.news_expires_at.slice(0, 10)} 自動下架`
+                                        : "已發佈"
+                                }
+                            >
+                                📣 已發佈到首頁
+                            </span>
+                        )}
+                        {news === "expired" && (
+                            <span className="rounded-full bg-[#7a4020]/15 px-2 py-0.5 text-[10px] text-[#7a4020]/60">
+                                新聞已過期
                             </span>
                         )}
                     </div>
@@ -259,6 +341,19 @@ function FaqRowItem({ row }: { row: FaqRow }) {
                 </div>
 
                 <div className="flex shrink-0 items-center gap-1.5">
+                    {news === "active" && (
+                        <form action={unpublishNews}>
+                            <input type="hidden" name="id" value={row.id} />
+                            <button
+                                type="submit"
+                                className="rounded-lg border border-[#b83553]/40 px-2.5 py-1 text-[11px] font-medium text-[#b83553] hover:bg-[#b83553]/10"
+                                title="從首頁最新消息立即下架"
+                            >
+                                下架
+                            </button>
+                        </form>
+                    )}
+
                     <form action={toggleFaqEnabled}>
                         <input type="hidden" name="id"   value={row.id} />
                         <input type="hidden" name="next" value={String(!row.enabled)} />
