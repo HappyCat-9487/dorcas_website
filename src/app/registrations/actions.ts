@@ -1,5 +1,6 @@
 "use server";
 
+import { REGISTRATION_ENABLED } from "@/lib/feature-flags";
 import { supabaseService } from "@/lib/supabase/server";
 import { sendLineText } from "@/lib/line";
 import { getSignedUpCount } from "@/lib/registration-status";
@@ -45,6 +46,10 @@ export type RegistrationInput = {
 export async function submitRegistration(
     input: RegistrationInput,
 ): Promise<RegistrationActionResult> {
+    if (!REGISTRATION_ENABLED) {
+        return { ok: false, error: "報名功能尚未開放，請稍後再試。" };
+    }
+
     // ── Honeypot check (silent block) ─────────────────────────────
     if (input.honeypot && input.honeypot.trim() !== "") {
         return { ok: true };

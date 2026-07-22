@@ -121,7 +121,7 @@ export function InquiryForm({ tourId, tourTitle }: Props) {
                 />
                 <label htmlFor="privacy" className="text-[13px] text-black/60">
                     我已經閱讀
-                    <a href="#" className="underline hover:text-[#e8928a]">隱私權政策</a>
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#e8928a]">隱私權政策</a>
                     並同意其內容
                 </label>
             </div>

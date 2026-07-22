@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { DepartureRow } from "@/components/tours/data";
+import { REGISTRATION_ENABLED } from "@/lib/feature-flags";
 
 type Props = { rows: DepartureRow[] };
 
@@ -39,6 +40,14 @@ export function DepartureTable({ rows }: Props) {
                     className="cursor-not-allowed rounded-full bg-[#e07070] px-5 py-1.5 text-[14px] font-semibold text-white opacity-90"
                   >
                     額滿
+                  </span>
+                ) : !REGISTRATION_ENABLED ? (
+                  <span
+                    aria-disabled="true"
+                    title="報名功能即將開放"
+                    className="cursor-not-allowed rounded-full bg-[#b8b8b8] px-5 py-1.5 text-[14px] font-semibold text-white"
+                  >
+                    即將開放
                   </span>
                 ) : row.registerHref ? (
                   <Link

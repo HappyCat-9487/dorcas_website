@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { GroupTour } from "@/components/groups/constants";
+import { REGISTRATION_ENABLED } from "@/lib/feature-flags";
 
 const columns = ["旅行日期", "行程名稱", "天數", "航空公司", "簽證", "價格/人", "報名狀態"];
 
@@ -20,6 +21,18 @@ function StatusCell({ tour }: { tour: GroupTour }) {
         className="inline-block min-w-[60px] cursor-not-allowed rounded-full bg-[#e07070] px-4 py-1.5 text-center text-[15px] font-semibold text-white"
       >
         額滿
+      </span>
+    );
+  }
+
+  if (!REGISTRATION_ENABLED) {
+    return (
+      <span
+        aria-disabled="true"
+        title="報名功能即將開放"
+        className="inline-block min-w-[60px] cursor-not-allowed rounded-full bg-[#b8b8b8] px-4 py-1.5 text-center text-[15px] font-semibold text-white"
+      >
+        即將開放
       </span>
     );
   }

@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { PageShell } from "@/components/nav/page-shell";
 import { RegistrationForm } from "@/components/tours/registration-form";
+import { REGISTRATION_ENABLED } from "@/lib/feature-flags";
 import { supabaseAnon } from "@/lib/supabase/server";
 import {
     computeRegistrationStatus,
@@ -18,6 +20,10 @@ type Props = { params: Promise<{ slug: string }> };
 export default async function TourRegisterPage({ params }: Props) {
     const { slug: rawSlug } = await params;
     let slug = rawSlug;
+
+    if (!REGISTRATION_ENABLED) {
+        redirect(`/tours/${encodeURIComponent(rawSlug)}`);
+    }
     try {
         const decoded = decodeURIComponent(rawSlug);
         if (decoded !== rawSlug) slug = decoded;
