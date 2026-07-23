@@ -44,7 +44,7 @@ export default async function AdminTourEditPage({
             .maybeSingle(),
         sb
             .from("tour_stops")
-            .select("id, sort_order, subtheme, introduction, image_path, icon_path")
+            .select("id, sort_order, subtheme, introduction, image_path, icon_path, latitude, longitude")
             .eq("tour_id", id)
             .order("sort_order"),
     ]);

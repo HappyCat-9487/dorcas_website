@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { updateSiteImage } from "@/app/admin/settings/actions";
-import { ImageCropDialog } from "@/components/admin/image-crop-dialog";
+import { ImageCropDialog, type FrontendMask } from "@/components/admin/image-crop-dialog";
 
 type Props = {
     /**
@@ -14,13 +14,28 @@ type Props = {
     label: string;
     hint: string;
     currentUrl: string | null;
+    /** Override the default crop overlay mask. Pass `null` for no mask. */
+    cropMask?: FrontendMask | null;
 };
 
 function withCacheBuster(url: string) {
     return `${url}${url.includes("?") ? "&" : "?"}v=${Date.now()}`;
 }
 
-export function SiteImageUploader({ settingKey, label, hint, currentUrl }: Props) {
+/** Default mask for destination heroes: small title at top + wave at bottom. */
+const DESTINATION_HERO_MASK: FrontendMask = {
+    kind: "wave",
+    heightPercent: 22,
+    topHeightPercent: 12,
+    topLabel: "前台這塊會被地區名稱蓋住",
+    label: "前台這塊會被波浪蓋住（重要構圖請放在中間）",
+};
+
+export function SiteImageUploader({ settingKey, label, hint, currentUrl, cropMask }: Props) {
+    // Use the explicit prop if provided; undefined = default destination mask.
+    const resolvedMask = cropMask === null ? undefined
+        : cropMask === undefined ? DESTINATION_HERO_MASK
+        : cropMask;
     const [preview, setPreview] = useState<string | null>(currentUrl);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -135,7 +150,7 @@ export function SiteImageUploader({ settingKey, label, hint, currentUrl }: Props
                     // All hero banners on the public site have a wavy bottom
                     // cutout (~22% of the hero height). Show this in the
                     // cropper so admins know which area will be hidden.
-                    frontendMask={{ kind: "wave", heightPercent: 22 }}
+                    frontendMask={resolvedMask}
                     onCancel={() => setPendingFile(null)}
                     onConfirm={async (cropped) => {
                         setPendingFile(null);

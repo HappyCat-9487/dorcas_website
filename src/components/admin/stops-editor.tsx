@@ -16,6 +16,8 @@ type StopRow = {
     icon_path: string;
     imagePreview: string;
     iconPreview: string;
+    latitude: string;
+    longitude: string;
     saving: boolean;
     error: string | null;
 };
@@ -29,6 +31,8 @@ type Props = {
         introduction: string | null;
         image_path: string | null;
         icon_path: string | null;
+        latitude: number | null;
+        longitude: number | null;
     }[];
 };
 
@@ -52,6 +56,8 @@ function makeEmpty(sort_order: number): StopRow {
         icon_path: "",
         imagePreview: "",
         iconPreview: "",
+        latitude: "",
+        longitude: "",
         saving: false,
         error: null,
     };
@@ -69,6 +75,8 @@ export function StopsEditor({ tourId, initialStops }: Props) {
                   icon_path: s.icon_path ?? "",
                   imagePreview: s.image_path ?? "",
                   iconPreview: s.icon_path ?? "",
+                  latitude: s.latitude != null ? String(s.latitude) : "",
+                  longitude: s.longitude != null ? String(s.longitude) : "",
                   saving: false,
                   error: null,
               }))
@@ -168,6 +176,16 @@ export function StopsEditor({ tourId, initialStops }: Props) {
         updateStop(idx, { saving: true, error: null });
 
         const resolvedIcon = inheritedIconPath(stops, idx);
+        const lat = stop.latitude.trim()  ? Number(stop.latitude)  : null;
+        const lng = stop.longitude.trim() ? Number(stop.longitude) : null;
+        if (lat !== null && (isNaN(lat) || lat < -90 || lat > 90)) {
+            updateStop(idx, { error: "緯度需在 -90 ~ 90 之間。", saving: false });
+            return;
+        }
+        if (lng !== null && (isNaN(lng) || lng < -180 || lng > 180)) {
+            updateStop(idx, { error: "經度需在 -180 ~ 180 之間。", saving: false });
+            return;
+        }
         const payload: TourStopData = {
             id: stop.id,
             sort_order: idx,
@@ -175,6 +193,8 @@ export function StopsEditor({ tourId, initialStops }: Props) {
             introduction: stop.introduction,
             image_path: stop.image_path,
             icon_path: resolvedIcon,
+            latitude: lat,
+            longitude: lng,
         };
 
         startTransition(async () => {
@@ -255,6 +275,41 @@ export function StopsEditor({ tourId, initialStops }: Props) {
                             placeholder="這個景點的短介紹..."
                             className="w-full rounded-lg border border-[#e8c9a0] bg-white px-3 py-1.5 text-sm focus:border-[#e8928a] focus:outline-none"
                         />
+                    </div>
+
+                    {/* Lat / Lng — for the interactive tour map */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-[#7a4020]">
+                                緯度
+                                <span className="ml-1 text-[10px] text-[#7a4020]/40">Latitude</span>
+                            </label>
+                            <input
+                                type="text"
+                                inputMode="decimal"
+                                value={stop.latitude}
+                                onChange={(e) => updateStop(idx, { latitude: e.target.value })}
+                                placeholder="e.g. 35.6762"
+                                className="w-full rounded-lg border border-[#e8c9a0] bg-white px-3 py-1.5 text-sm focus:border-[#e8928a] focus:outline-none"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-[#7a4020]">
+                                經度
+                                <span className="ml-1 text-[10px] text-[#7a4020]/40">Longitude</span>
+                            </label>
+                            <input
+                                type="text"
+                                inputMode="decimal"
+                                value={stop.longitude}
+                                onChange={(e) => updateStop(idx, { longitude: e.target.value })}
+                                placeholder="e.g. 139.6503"
+                                className="w-full rounded-lg border border-[#e8c9a0] bg-white px-3 py-1.5 text-sm focus:border-[#e8928a] focus:outline-none"
+                            />
+                        </div>
+                        <p className="col-span-2 text-[10px] text-[#7a4020]/50">
+                            可在 Google Maps 上右鍵點擊地點 → 複製座標。有座標的景點會自動顯示在行程地圖上。
+                        </p>
                     </div>
 
                     {/* Image + Icon uploads */}

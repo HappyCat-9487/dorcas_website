@@ -1,11 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { TourTabBar, type TourTab } from "@/components/tours/tab-bar";
 import { ItineraryStopCard } from "@/components/tours/itinerary-stop";
 import { DepartureTable } from "@/components/tours/departure-table";
 import { InquiryForm } from "@/components/tours/inquiry-form";
 import type { DepartureRow } from "@/components/tours/data";
+
+// Leaflet touches `window` at import time — never SSR this module.
+const TourMap = dynamic(
+  () => import("@/components/tours/tour-map").then((m) => m.TourMap),
+  { ssr: false },
+);
 
 export type TourStop = {
   subtheme: string;
@@ -13,6 +20,8 @@ export type TourStop = {
   image_path: string | null;
   icon_path: string | null;
   sort_order: number;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 type Props = {
@@ -33,6 +42,19 @@ export function TourDetailClient({
   departures,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TourTab>("overview");
+
+  const mapStops = useMemo(
+    () =>
+      stops
+        .filter((s) => s.latitude != null && s.longitude != null)
+        .map((s) => ({
+          name: s.subtheme,
+          latitude: s.latitude!,
+          longitude: s.longitude!,
+          order: s.sort_order + 1,
+        })),
+    [stops],
+  );
 
   return (
     <>
@@ -89,6 +111,12 @@ export function TourDetailClient({
               })()
             ) : (
               <p className="text-center text-gray-400">行程景點尚未新增。</p>
+            )}
+
+            {mapStops.length > 0 && (
+              <div className="mt-10 md:mt-16">
+                <TourMap stops={mapStops} />
+              </div>
             )}
           </div>
         )}

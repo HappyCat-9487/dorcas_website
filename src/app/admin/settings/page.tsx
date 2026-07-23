@@ -60,6 +60,13 @@ export default async function AdminSettingsPage() {
                         label="上傳 Hero 圖片"
                         hint="JPG / PNG / WEBP，建議 16:9"
                         currentUrl={heroUrl}
+                        cropMask={{
+                            kind: "wave",
+                            heightPercent: 22,
+                            topHeightPercent: 25,
+                            topLabel: "前台這塊會被 Logo／導覽列蓋住",
+                            label: "前台這塊會被波浪蓋住（重要構圖請放在中間）",
+                        }}
                     />
                 </div>
 
@@ -114,6 +121,7 @@ export default async function AdminSettingsPage() {
                         label="上傳訂票服務 Hero"
                         hint="JPG / PNG / WEBP，建議 16:9"
                         currentUrl={bookingHeroUrl}
+                        cropMask={null}
                     />
                 </div>
 
@@ -132,6 +140,7 @@ export default async function AdminSettingsPage() {
                         label="上傳團體總列表 Hero"
                         hint="JPG / PNG / WEBP，建議 16:9"
                         currentUrl={groupsHeroUrl}
+                        cropMask={null}
                     />
                 </div>
 

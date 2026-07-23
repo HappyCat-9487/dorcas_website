@@ -345,31 +345,33 @@ export type TourStopData = {
     introduction: string;
     image_path: string;
     icon_path: string;
+    latitude?: number | null;
+    longitude?: number | null;
 };
 
 export async function upsertTourStop(tourId: string, stop: TourStopData) {
     const sb = supabaseService();
 
+    const row = {
+        sort_order:   stop.sort_order,
+        subtheme:     stop.subtheme,
+        introduction: stop.introduction,
+        image_path:   stop.image_path || null,
+        icon_path:    stop.icon_path  || null,
+        latitude:     stop.latitude  ?? null,
+        longitude:    stop.longitude ?? null,
+    };
+
     if (stop.id) {
         const { error } = await sb
             .from("tour_stops")
-            .update({
-                sort_order:   stop.sort_order,
-                subtheme:     stop.subtheme,
-                introduction: stop.introduction,
-                image_path:   stop.image_path || null,
-                icon_path:    stop.icon_path  || null,
-            })
+            .update(row)
             .eq("id", stop.id);
         if (error) throw new Error(error.message);
     } else {
         const { error } = await sb.from("tour_stops").insert({
-            tour_id:      tourId,
-            sort_order:   stop.sort_order,
-            subtheme:     stop.subtheme,
-            introduction: stop.introduction,
-            image_path:   stop.image_path || null,
-            icon_path:    stop.icon_path  || null,
+            tour_id: tourId,
+            ...row,
         });
         if (error) throw new Error(error.message);
     }

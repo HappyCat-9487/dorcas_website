@@ -16,9 +16,48 @@ const INITIAL: Message[] = [
 /**
  * Renders the assistant message body as markdown.
  * - GitHub-flavoured markdown (lists, tables, strikethrough)
- * - Internal `/tours/...` links open via Next <Link> (client-side nav)
- * - External links open in new tab
+ * - Internal site paths (/tours/..., /destinations/...) open via Next <Link>
+ * - Even if the model invents an absolute URL like https://www.dorcastravel.com/tours/...,
+ *   we rewrite it to a same-origin relative path so localhost demos work
+ * - True external links open in a new tab
  */
+function toInternalPath(href: string | undefined): string | null {
+  if (!href) return null;
+
+  // Already a relative path on our site.
+  if (href.startsWith("/")) return href;
+
+  // Absolute URL that the model invented for our site — strip the origin.
+  try {
+    const u = new URL(href);
+    const host = u.hostname.replace(/^www\./, "");
+    const isOurDomain =
+      host === "dorcastravel.com" ||
+      host === "dorcas-ts.com.tw" ||
+      host === "localhost" ||
+      host.endsWith(".vercel.app");
+    // Also treat any absolute URL whose path starts with a known site
+    // route as internal, even if the domain is wrong/guessed.
+    const isSitePath =
+      u.pathname.startsWith("/tours/") ||
+      u.pathname.startsWith("/destinations/") ||
+      u.pathname === "/groups" ||
+      u.pathname === "/ai-chat" ||
+      u.pathname === "/contact" ||
+      u.pathname === "/privacy" ||
+      u.pathname === "/booking-explain" ||
+      u.pathname === "/search";
+
+    if (isOurDomain || isSitePath) {
+      return u.pathname + u.search + u.hash;
+    }
+  } catch {
+    // Not a valid absolute URL — leave as-is below.
+  }
+
+  return null;
+}
+
 function AssistantMarkdown({ text }: { text: string }) {
   return (
     <div className="prose-chat">
@@ -26,11 +65,11 @@ function AssistantMarkdown({ text }: { text: string }) {
         remarkPlugins={[remarkGfm]}
         components={{
           a: ({ href, children, ...rest }) => {
-            const isInternal = typeof href === "string" && href.startsWith("/");
-            if (isInternal) {
+            const internal = toInternalPath(href);
+            if (internal) {
               return (
                 <Link
-                  href={href as string}
+                  href={internal}
                   className="font-medium text-[#b83553] underline-offset-2 hover:underline"
                 >
                   {children}

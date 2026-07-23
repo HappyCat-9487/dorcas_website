@@ -299,13 +299,30 @@ These features work normally in production V1:
 
 ---
 
+## 7b. MapTiler — Traditional Chinese map labels
+
+Tour detail maps use **MapTiler** vector tiles with `Language.TRADITIONAL_CHINESE` when a key is set.
+
+1. Create a free account at https://cloud.maptiler.com/
+2. Open **Account → Keys** → copy the default key (or create one)
+3. In `.env.local`:
+   ```
+   NEXT_PUBLIC_MAPTILER_KEY=your_key_here
+   ```
+4. Restart `pnpm dev`
+5. Also add the same variable in **Vercel → Project → Settings → Environment Variables**
+
+Free tier is usually enough for early traffic (~100k tile requests/month). Without the key, the map falls back to OpenStreetMap (local-language place names).
+
+---
+
 ## 8. Alpha testing checklist (V1 readiness)
 
 Run this checklist once before deploying to production for the first time.
 
 ### A. Environment & configuration
 
-- [ ] `.env` / `.env.local` has all required variables (Supabase URL/keys, LINE tokens, OpenAI key)
+- [ ] `.env` / `.env.local` has all required variables (Supabase URL/keys, LINE tokens, OpenAI key, MapTiler key for 繁中 map labels)
 - [ ] `.env` is in `.gitignore` (never committed)
 - [ ] Vercel project has all env vars set (copy from `.env.local`, adjust `NEXT_PUBLIC_ENABLE_REGISTRATION`)
 - [ ] Supabase project: all migrations applied (`supabase db push`)

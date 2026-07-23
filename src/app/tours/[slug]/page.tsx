@@ -109,7 +109,7 @@ export default async function TourDetailPage({ params }: Props) {
   const [{ data: stops }, { data: coverImg }, signedUp] = await Promise.all([
     sb
       .from("tour_stops")
-      .select("subtheme, introduction, image_path, icon_path, sort_order")
+      .select("subtheme, introduction, image_path, icon_path, sort_order, latitude, longitude")
       .eq("tour_id", tour.id)
       .order("sort_order"),
     sb

@@ -6,21 +6,24 @@ import Cropper, { type Area } from "react-easy-crop";
 export type CropMimeType = "image/jpeg" | "image/png";
 
 /**
- * Optional overlay shown on top of the crop area to preview what the
- * front-end will visually mask out (e.g. the wavy bottom on hero banners).
+ * Optional overlays on the crop area so admins see what the front-end will
+ * cover (wave at the bottom, header / title band at the top).
  *
- * `heightPercent`: 0–100, how tall the wave cutout is (% of crop area height).
- * `color`: CSS color used for the overlay (semi-transparent recommended).
- *
- * The wave SVG path mirrors the actual SVG used by the homepage / destination
- * heros so the admin sees the same cutout shape that visitors will see.
+ * Percentages are of the crop rectangle height (0–100).
+ * The wave SVG path mirrors the homepage / destination hero cutout.
  */
 export type FrontendMask = {
     kind: "wave";
     /** 0–100; % of crop area height the wave occupies (from bottom). */
     heightPercent: number;
+    /**
+     * Optional top band (logo / region tabs / destination title overlay).
+     * When set, a semi-transparent bar is drawn from the top of the crop.
+     */
+    topHeightPercent?: number;
     color?: string;
     label?: string;
+    topLabel?: string;
 };
 
 type Props = {
@@ -126,13 +129,18 @@ export function ImageCropDialog({
                         />
                     )}
                     {frontendMask?.kind === "wave" && (
-                        <WaveMaskPreview
+                        <HeroMaskPreview
                             aspect={aspect}
-                            heightPercent={frontendMask.heightPercent}
+                            bottomHeightPercent={frontendMask.heightPercent}
+                            topHeightPercent={frontendMask.topHeightPercent}
                             color={frontendMask.color ?? "rgba(245, 202, 145, 0.78)"}
-                            label={
+                            bottomLabel={
                                 frontendMask.label ??
-                                "前台這塊會被波浪蓋住（重要構圖請放在上方）"
+                                "前台這塊會被波浪蓋住（重要構圖請放在中間）"
+                            }
+                            topLabel={
+                                frontendMask.topLabel ??
+                                "前台這塊會被標題／導覽蓋住（重要構圖請往下移）"
                             }
                         />
                     )}
@@ -184,20 +192,25 @@ export function ImageCropDialog({
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// Wave mask preview (overlays the crop rectangle so admins can see what
-// the front-end wave SVG will hide).
+// Hero mask preview — top band (logo / tabs / destination title) +
+// bottom wave cutout. Overlays sit on the crop rectangle so admins
+// keep important composition in the visible "safe" middle zone.
 // ─────────────────────────────────────────────────────────────────────
 
-function WaveMaskPreview({
+function HeroMaskPreview({
     aspect,
-    heightPercent,
+    bottomHeightPercent,
+    topHeightPercent,
     color,
-    label,
+    bottomLabel,
+    topLabel,
 }: {
     aspect: number;
-    heightPercent: number;
+    bottomHeightPercent: number;
+    topHeightPercent?: number;
     color: string;
-    label: string;
+    bottomLabel: string;
+    topLabel: string;
 }) {
     // The Cropper sizes the crop rectangle to fit the container while
     // respecting the aspect. We mirror that here with `aspect-ratio` so the
@@ -208,9 +221,26 @@ function WaveMaskPreview({
                 className="relative w-[90%] max-w-full"
                 style={{ aspectRatio: `${aspect}` }}
             >
+                {/* Top blocked zone — pink header / logo / destination title */}
+                {typeof topHeightPercent === "number" && topHeightPercent > 0 && (
+                    <div
+                        className="absolute left-0 right-0 top-0 flex items-end justify-center overflow-hidden"
+                        style={{
+                            height: `${topHeightPercent}%`,
+                            background:
+                                "linear-gradient(180deg, rgba(210,106,106,0.82) 0%, rgba(210,106,106,0.55) 70%, rgba(210,106,106,0.25) 100%)",
+                        }}
+                    >
+                        <p className="mb-1 whitespace-nowrap rounded bg-black/55 px-2 py-0.5 text-[11px] text-white">
+                            {topLabel}
+                        </p>
+                    </div>
+                )}
+
+                {/* Bottom wave cutout */}
                 <div
-                    className="absolute left-0 right-0 bottom-0 overflow-hidden"
-                    style={{ height: `${heightPercent}%` }}
+                    className="absolute bottom-0 left-0 right-0 overflow-hidden"
+                    style={{ height: `${bottomHeightPercent}%` }}
                 >
                     <svg
                         viewBox="0 0 1440 130"
@@ -224,7 +254,7 @@ function WaveMaskPreview({
                         />
                     </svg>
                     <p className="absolute bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black/55 px-2 py-0.5 text-[11px] text-white">
-                        {label}
+                        {bottomLabel}
                     </p>
                 </div>
             </div>
