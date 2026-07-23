@@ -51,8 +51,15 @@ export const AI_TOOLS = [
                     },
                     destination_slug: {
                         type: "string",
-                        description:
-                            "分類 slug，例如 north-europe、japan、korea。若不知道請省略。",
+                        description: `分類 slug。客人用中文時請對照下表轉成 slug：
+台灣→taiwan, 北部→north, 中部→central, 南部→south, 東部→east, 離島→islands, 郵輪→cruise,
+亞洲→asia, 日本→japan, 韓國→korea, 蒙古/俄羅斯→mongolia-russia, 東南亞→southeast-asia,
+美洲→americas, 美國→usa, 加拿大→canada,
+大洋洲→oceania, 澳洲→australia, 紐西蘭→new-zealand,
+歐洲→europe, 北歐→northern-europe, 西歐→western-europe, 南歐→southern-europe, 東歐→eastern-europe,
+非洲→africa, 北非→northern-africa, 摩洛哥→morocco, 東非→eastern-africa, 南非→southern-africa,
+主題式→theme, 海島漫遊→island-hopping, 蜜月旅行→honeymoon, 冬季滑雪→winter-skiing, 文化體驗→cultural-experience, 櫻花季→sakura-season, 薰衣草季→lavender-season.
+若不知道請省略。`,
                     },
                 },
                 required: [],
@@ -128,8 +135,11 @@ async function searchTours(args: SearchToursArgs) {
     const sb = supabaseAnon();
     const kw = (args.keyword ?? "").replace(KW_BAD_CHARS, " ").trim();
 
-    // Resolve destination slug → category id (so we can filter by tour_categories).
-    let categoryId: string | null = null;
+    // Resolve destination slug → category id(s).
+    // If the slug is a parent category (e.g. "asia"), also include all its
+    // children (e.g. "japan", "korea", "southeast-asia") so the AI finds
+    // tours categorized under sub-regions too.
+    let categoryIds: string[] | null = null;
     if (args.destination_slug) {
         const { data: cat } = await sb
             .from("categories")
@@ -142,7 +152,14 @@ async function searchTours(args: SearchToursArgs) {
                 note: `找不到 destination_slug "${args.destination_slug}" 對應的分類。`,
             };
         }
-        categoryId = cat.id as string;
+        const parentId = cat.id as string;
+        // Check for child categories under this parent.
+        const { data: children } = await sb
+            .from("categories")
+            .select("id")
+            .eq("parent_id", parentId);
+        const childIds = (children ?? []).map((c) => c.id as string);
+        categoryIds = [parentId, ...childIds];
     }
 
     // First pass: collect IDs that match the keyword across title/summary/stops.
@@ -183,7 +200,7 @@ async function searchTours(args: SearchToursArgs) {
     // Hide tours that already departed.
     q = q.gte("end_date", today);
 
-    if (categoryId) q = q.eq("tour_categories.category_id", categoryId);
+    if (categoryIds) q = q.in("tour_categories.category_id", categoryIds);
     if (args.start) q = q.gte("start_date", args.start);
     if (args.end)   q = q.lte("end_date",   args.end);
     if (idsFromKeyword) q = q.in("id", idsFromKeyword);

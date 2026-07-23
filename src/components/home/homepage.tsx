@@ -1,4 +1,5 @@
-import { tripFeatures, type TripFeature } from "@/components/home/constants";
+import Link from "next/link";
+import { type TripFeature } from "@/components/home/constants";
 import { HomeHero } from "@/components/home/home-hero";
 import { NewsSection } from "@/components/home/news-section";
 import { TripFeatureRow } from "@/components/home/trip-feature-row";
@@ -85,10 +86,6 @@ export async function Homepage() {
     getHomepageNews(),
   ]);
 
-  // When the admin hasn't published anything yet, keep the old placeholder look
-  // so the homepage doesn't render empty.
-  const features = dbFeatures.length > 0 ? dbFeatures : tripFeatures;
-
   return (
     <main className="bg-[#f5ca91] text-black">
       <HomeHero />
@@ -96,10 +93,47 @@ export async function Homepage() {
       <NewsSection items={news} />
 
       <section className="mx-auto max-w-[1440px] space-y-10 px-4 pb-14 md:space-y-14 md:px-10 md:pb-20 pt-10 md:pt-14">
-        {features.map((feature, i) => (
-          <TripFeatureRow key={`${feature.title}-${i}`} {...feature} />
-        ))}
+        {dbFeatures.length > 0 ? (
+          dbFeatures.map((feature, i) => (
+            <TripFeatureRow key={`${feature.title}-${i}`} {...feature} />
+          ))
+        ) : (
+          <EmptyFeatures />
+        )}
       </section>
     </main>
+  );
+}
+
+/**
+ * Shown when there are no upcoming published tours. We intentionally do NOT
+ * fall back to hardcoded placeholder tours (which would show fake trips with
+ * broken images) — a clean "coming soon" state is more honest for a live site.
+ */
+function EmptyFeatures() {
+  return (
+    <div className="rounded-3xl border border-black/10 bg-[#fdf7ee] px-6 py-16 text-center">
+      <p className="text-2xl font-bold text-[#7a4020] md:text-3xl">
+        更多精彩行程規劃中
+      </p>
+      <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-[#7a4020]/60">
+        目前尚無即將出發的行程，我們正在籌備新的旅程。
+        歡迎透過下方連結瀏覽所有團體行程，或與我們聯絡。
+      </p>
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+        <Link
+          href="/groups"
+          className="rounded-full bg-[#d26a6a] px-6 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+        >
+          瀏覽團體總列表
+        </Link>
+        <Link
+          href="/contact"
+          className="rounded-full border border-[#d26a6a] px-6 py-2.5 text-sm font-semibold text-[#d26a6a] transition-colors hover:bg-[#d26a6a]/10"
+        >
+          聯絡我們
+        </Link>
+      </div>
+    </div>
   );
 }

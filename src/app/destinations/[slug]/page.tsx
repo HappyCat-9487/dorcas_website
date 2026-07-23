@@ -131,15 +131,16 @@ export default async function DestinationPage({ params }: Props) {
           </div>
         </div>
 
+        {/* Wave cutout — matches home hero proportions */}
         <div className="absolute bottom-0 left-0 right-0">
           <svg
             viewBox="0 0 1440 100"
             preserveAspectRatio="none"
-            className="block h-[70px] w-full md:h-[110px]"
+            className="block h-[80px] w-full md:h-[130px]"
             aria-hidden="true"
           >
             <path
-              d="M0,60 C200,10 480,90 720,40 C960,0 1220,80 1440,35 L1440,100 L0,100 Z"
+              d="M0,80 C200,20 480,110 720,60 C960,10 1200,90 1440,50 L1440,130 L0,130 Z"
               fill="#f5ca91"
             />
           </svg>
